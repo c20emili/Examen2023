@@ -17,8 +17,7 @@
     var lives = 5;
     var money = 0;//used to buy towers
     var time;
-    var lane1,lane2,lane3,lane4,lane5=[];
-    var lanes = [lane1,lane2,lane3,lane4,lane5];//the lanes on the gamefield
+    var lanes = [[],[],[],[],[]];//the lanes on the gamefield
     // unit = {life,position,type};
     var unit1={life:5,position:0,type:1},unit1={life:10,position:0,type:2},unit1={life:25,position:0,type:3};
     var tower;
@@ -26,18 +25,70 @@
     var bishop={name:"Bishop",health:3,lane:0,position:0,type:2,attack:2};
     var pawn={name:"Pawn",health:3,lane:0,position:0,type:3,attack:2};
     var wall={name:"Wall",health:15,lane:0,position:0,type:4,attack:0};
+    var towers=[];
+    var waveTimer;
+    var paused=true;
+    var endOfLanes = 10;
     function spawnUnit(lane,unit){
         lanes[lane].push(unit);
     }
     function placeTower(tower,l,pos){
         tower.lane=l;
         tower.position=pos;
-        document.getElementById("L"+l+"P"+pos).innerHTML=name+" hp:"+tower.health;
+        towers.push[tower];
+        document.getElementById("L"+l+"P"+pos).innerHTML=name+" hp:"+tower.health;//temp
+
     }
     function selectTower(T){
         tower=T;
     }
+    function turn(){//temp
+        gameLoop();
+    }
+    function nextWave(){
+        waveNumber++;
+        waveTimer=0;
+        paused=false;
+    }
+    function gameLoop(){
+        if (!paused) {
+            activeWave(waves[waveNumber]);            
+        }
+    }
+    function activeWave(wave){
+        waveTimer++;
+        for (let i = 0; i < wave.length; i++) {
+            if (i.spawnTime==waveTimer) {
+                spawnUnit(i.lane,i.unit);
+            }
+        }
+        for (let i = 0; i < lanes.length; i++) {
+            for (let j = 0; j < i.length; j++) {
+                if(j.life <= 0){
+                    lanes[i].splice(j,1);
+                }
+                var attacked=false;
+                for (let k = 0; k < towers.length; k++) {
+                    if (j.position==towers[k].position-1 && i == towers[k].lane) {
+                        towers[k].health--;
+                        attacked=true;
+                    }
+                }
+                if (!attacked){
+                    if (j.position==endOfLanes) {
+                        lives--;
+                        lanes[i].splice(j,1);
+                    } else {
+                        j.position++;                        
+                    }
+                }     
+            }
+        }
+        if (wave[wave.length-1]<waveTimer && lanes[1]==[] && lanes[2]==[] && lanes[3]==[] && lanes[4]==[] && lanes[5]==[]) {
+            paused=true;
+        }
 
+    }
     </script>
 </head>
 <body>
@@ -86,6 +137,7 @@
     <button onclick="selectTower(bishop)">Select Bishop</button>
     <button onclick="selectTower(pawn)">Select Pawn</button>
     <button onclick="selectTower(wall)">Select Wall</button>
-    <button onclick="">Start Wave</button>
+    <button onclick="nextWave()">Start Wave</button>
+    <button onclick="turn()">Next turn</button>
 </body>
 </html>
