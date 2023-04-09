@@ -5,17 +5,87 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        td{
+            width: 2vw;
+            height: 1vh;
+            color: red;
+            background-color: black;
+        }
+    </style>
     <script>
     var lives = 5;
-    var money = 0;
-    var t;
-    
+    var money = 0;//used to buy towers
+    var time;
+    var lane1,lane2,lane3,lane4,lane5=[];
+    var lanes = [lane1,lane2,lane3,lane4,lane5];//the lanes on the gamefield
+    // unit = {life,position,type};
+    var unit1={life:5,position:0,type:1},unit1={life:10,position:0,type:2},unit1={life:25,position:0,type:3};
+    var tower;
+    var rook={name:"Rook",health:3,lane:0,position:0,type:1,attack:1};
+    var bishop={name:"Bishop",health:3,lane:0,position:0,type:2,attack:2};
+    var pawn={name:"Pawn",health:3,lane:0,position:0,type:3,attack:2};
+    var wall={name:"Wall",health:15,lane:0,position:0,type:4,attack:0};
+    function spawnUnit(lane,unit){
+        lanes[lane].push(unit);
+    }
+    function placeTower(tower,l,pos){
+        tower.lane=l;
+        tower.position=pos;
+        document.getElementById("L"+l+"P"+pos).innerHTML=name+" hp:"+tower.health;
+    }
+    function selectTower(T){
+        tower=T;
+    }
+
     </script>
 </head>
 <body>
     <div id="gameWindow">
         <h3 id="lifeCounter">5</h3>
         <h3 id="moneyCounter">0</h3>
+        <table id="tempView">
+            <tr id="Lane1">
+                <td id="L1P1" onclick="placeTower(tower,1,1)"></td>
+                <td id="L1P2" onclick="placeTower(tower,1,2)"></td>
+                <td id="L1P3" onclick="placeTower(tower,1,3)"></td>
+                <td id="L1P4" onclick="placeTower(tower,1,4)"></td>
+                <td id="L1P5" onclick="placeTower(tower,1,5)"></td>
+            </tr>
+            <tr id="Lane2">
+                <td id="L2P1" onclick="placeTower(tower,2,1)"></td>
+                <td id="L2P2" onclick="placeTower(tower,2,2)"></td>
+                <td id="L2P3" onclick="placeTower(tower,2,3)"></td>
+                <td id="L2P4" onclick="placeTower(tower,2,4)"></td>
+                <td id="L2P5" onclick="placeTower(tower,2,5)"></td>
+            </tr>
+            <tr id="Lane3">
+                <td id="L3P1" onclick="placeTower(tower,3,1)"></td>
+                <td id="L3P2" onclick="placeTower(tower,3,2)"></td>
+                <td id="L3P3" onclick="placeTower(tower,3,3)"></td>
+                <td id="L3P4" onclick="placeTower(tower,3,4)"></td>
+                <td id="L3P5" onclick="placeTower(tower,3,5)"></td>
+            </tr>
+            <tr id="Lane4">
+                <td id="L4P1" onclick="placeTower(tower,4,1)"></td>
+                <td id="L4P2" onclick="placeTower(tower,4,2)"></td>
+                <td id="L4P3" onclick="placeTower(tower,4,3)"></td>
+                <td id="L4P4" onclick="placeTower(tower,4,4)"></td>
+                <td id="L4P5" onclick="placeTower(tower,4,5)"></td>
+            </tr>
+            <tr id="Lane5">
+                <td id="L5P1" onclick="placeTower(tower,5,1)"></td>
+                <td id="L5P2" onclick="placeTower(tower,5,2)"></td>
+                <td id="L5P3" onclick="placeTower(tower,5,3)"></td>
+                <td id="L5P4" onclick="placeTower(tower,5,4)"></td>
+                <td id="L5P5" onclick="placeTower(tower,5,5)"></td>
+            </tr>
+        </table>
     </div>
+    <button onclick="selectTower(rook)">Select Rook</button>
+    <button onclick="selectTower(bishop)">Select Bishop</button>
+    <button onclick="selectTower(pawn)">Select Pawn</button>
+    <button onclick="selectTower(wall)">Select Wall</button>
+    <button onclick="">Start Wave</button>
 </body>
 </html>
