@@ -57,33 +57,65 @@
     }
     function activeWave(wave){
         waveTimer++;
+        //enemy spawn
         for (let i = 0; i < wave.length; i++) {
-            if (i.spawnTime==waveTimer) {
-                spawnUnit(i.lane,i.unit);
+            if (wave[i].spawnTime==waveTimer) {
+                spawnUnit(wave[i].lane,wave[i].unit);
             }
         }
+        //Enemy unit movement
         for (let i = 0; i < lanes.length; i++) {
-            for (let j = 0; j < i.length; j++) {
-                if(j.life <= 0){
-                    lanes[i].splice(j,1);
-                }
+            for (let j = 0; j < lanes[i].length; j++) {
                 var attacked=false;
                 for (let k = 0; k < towers.length; k++) {
-                    if (j.position==towers[k].position-1 && i == towers[k].lane) {
+                    if (lanes[i][j].position==towers[k].position-1 && i == towers[k].lane) {
                         towers[k].health--;
                         attacked=true;
                     }
                 }
                 if (!attacked){
-                    if (j.position==endOfLanes) {
+                    if (lanes[i][j].position==endOfLanes) {
                         lives--;
                         lanes[i].splice(j,1);
                     } else {
-                        j.position++;                        
+                        lanes[i][j].position++;                        
                     }
                 }     
             }
         }
+        for (let i = 0; i < towers.length; i++) {
+            var t = towers[i];
+            if (t.type==1) {
+                var dead=[];
+                for (let j = 0; j < lanes[t.lane].length; j++) {
+                    lanes[t.lane][j].life - t.attack;
+                    if(lanes[t.lane][j].life <= 0) {
+                        dead.push(j);
+                    }
+                }
+                for (let j = 0; j < dead.length; j++) {
+                    lanes[t.lane].splice(dead[j],1);                    
+                }
+            } else if (t.type==2) {
+                lanes[t.lane+1][0].life-t.attack;
+                lanes[t.lane-1][0].life-t.attack;
+                if (lanes[t.lane+1][0].life <= 0) {
+                    lanes[t.lane+1].shift();
+                }
+                if (lanes[t.lane-1][0].life <= 0) {
+                    lanes[t.lane-1].shift();
+                }
+                
+            } else if (t.type==3) {
+                lanes[t.lane][0].life-t.attack;
+                if (lanes[t.lane][0].life <= 0) {
+                    lanes[t.lane].shift();
+                }
+                
+            }
+            
+        }
+        //end of wave condition
         if (wave[wave.length-1]<waveTimer && lanes[1]==[] && lanes[2]==[] && lanes[3]==[] && lanes[4]==[] && lanes[5]==[]) {
             paused=true;
         }
