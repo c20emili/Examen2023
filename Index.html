@@ -24,16 +24,16 @@
         }
 
         var lives = 5;
-        var money = 0;//used to buy towers
+        var money = 200;//used to buy towers
         var time;
         var lanes = [[],[],[],[],[]];//the lanes on the gamefield
         // unit = {life,position,type};
-        var unit1={life:5,position:0,type:1},unit2={life:10,position:0,type:2},unit3={life:25,position:0,type:3};
+        var unit1={life:5,position:0,type:1,loot:50},unit2={life:10,position:0,type:2,loot:150},unit3={life:25,position:0,type:3,loot:500};
         var tower;
-        var rook={name:"Rook",health:3,lane:0,position:0,type:1,attack:1};
-        var bishop={name:"Bishop",health:3,lane:0,position:0,type:2,attack:2};
-        var pawn={name:"Pawn",health:3,lane:0,position:0,type:3,attack:2};
-        var wall={name:"Wall",health:15,lane:0,position:0,type:4,attack:0};
+        var rook={name:"Rook",health:3,lane:0,position:0,type:1,attack:1,cost:200,note:"Attacks all enemies in it's lane"};
+        var bishop={name:"Bishop",health:3,lane:0,position:0,type:2,attack:2,cost:100,note:"Attacks the first enemies in the lanes next to it"};
+        var pawn={name:"Pawn",health:3,lane:0,position:0,type:3,attack:2,cost:50,note:"Attacks the first enemy in it's lane"};
+        var wall={name:"Wall",health:15,lane:0,position:0,type:4,attack:0,cost:100,note:"Do not attack but have high health"};
         var towers=[];
         var waveTimer;
         var paused=true;
@@ -42,10 +42,13 @@
             lanes[lane].push(unit);
         }
         function placeTower(tower,l,pos){
-            tower.lane=l;
-            tower.position=pos;
-            towers.push[tower];
-            document.getElementById("L"+l+"P"+pos).innerHTML=name+" hp:"+tower.health;//temp
+            if (money>=tower.cost) {
+                tower.lane=l;
+                tower.position=pos;
+                towers.push[tower];
+                document.getElementById("L"+l+"P"+pos).innerHTML=name+" hp:"+tower.health;//temp
+                money=money-tower.cost;
+            }
 
         }
         function selectTower(T){
