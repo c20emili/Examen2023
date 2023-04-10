@@ -15,29 +15,34 @@
     </style>
     <script>
         var waveAmount = 3;
+        var unit1={life:5,position:0,type:1,loot:50},unit2={life:10,position:0,type:2,loot:150},unit3={life:25,position:0,type:3,loot:500};
         var wave1 = [{spawnTime:1,lane:3,unit:unit1},{spawnTime:6,lane:4,unit:unit1},{spawnTime:11,lane:2,unit:unit1},{spawnTime:16,lane:3,unit:unit1},{spawnTime:21,lane:2,unit:unit1}];
         var wave2 = [{spawnTime:1,lane:3,unit:unit1},{spawnTime:6,lane:4,unit:unit1},{spawnTime:11,lane:2,unit:unit1},{spawnTime:16,lane:3,unit:unit1},{spawnTime:21,lane:2,unit:unit1}];
         var wave3 = [{spawnTime:1,lane:3,unit:unit1},{spawnTime:6,lane:4,unit:unit1},{spawnTime:11,lane:2,unit:unit1},{spawnTime:16,lane:3,unit:unit1},{spawnTime:21,lane:2,unit:unit1}];
-        var waves = [];
-        for (let i = 0; i < waveAmount.length; i++) {
-            waves.push["wave"+i];
-        }
-
+        var waves = [wave1];
+        var waveNumber = 0;
+        var waveTimer;
         var lives = 5;
         var money = 200;//used to buy towers
-        var time;
         var lanes = [[],[],[],[],[]];//the lanes on the gamefield
         // unit = {life,position,type};
-        var unit1={life:5,position:0,type:1,loot:50},unit2={life:10,position:0,type:2,loot:150},unit3={life:25,position:0,type:3,loot:500};
         var tower;
         var rook={name:"Rook",health:3,lane:0,position:0,type:1,attack:1,cost:200,note:"Attacks all enemies in it's lane"};
         var bishop={name:"Bishop",health:3,lane:0,position:0,type:2,attack:2,cost:100,note:"Attacks the first enemies in the lanes next to it"};
         var pawn={name:"Pawn",health:3,lane:0,position:0,type:3,attack:2,cost:50,note:"Attacks the first enemy in it's lane"};
         var wall={name:"Wall",health:15,lane:0,position:0,type:4,attack:0,cost:100,note:"Do not attack but have high health"};
         var towers=[];
-        var waveTimer;
         var paused=true;
         var endOfLanes = 10;
+        function restartGame(){
+            waves = [];
+            waveNumber=0;
+            for (let i = 1; i <= waveAmount; i++) {
+                waves.push(window["wave"+i]);
+            }
+            document.getElementById("lifeCounter").innerHTML = lives;
+            document.getElementById("moneyCounter").innerHTML = money;
+        }
         function spawnUnit(lane,unit){
             lanes[lane].push(unit);
         }
@@ -63,8 +68,9 @@
             paused=false;
         }
         function gameLoop(){
+            document.getElementById("lifeCounter").innerHTML = lives;
             if (!paused) {
-                activeWave(waves[waveNumber]);            
+                activeWave(waves[waveNumber]);     
             }
         }
         function activeWave(wave){
@@ -88,6 +94,7 @@
                     if (!attacked){
                         if (lanes[i][j].position==endOfLanes) {
                             lives--;
+                            document.getElementById("lifeCounter").innerHTML = lives;
                             lanes[i].splice(j,1);
                         } else {
                             lanes[i][j].position++;                        
@@ -134,10 +141,10 @@
         }
     </script>
 </head>
-<body>
+<body onload="restartGame()">
     <div id="gameWindow">
-        <h3 id="lifeCounter">5</h3>
-        <h3 id="moneyCounter">0</h3>
+        <h3 id="lifeCounter"></h3>
+        <h3 id="moneyCounter"></h3>
         <table id="tempView">
             <tr id="Lane1">
                 <td id="L1P1" onclick="placeTower(tower,1,1)"></td>
@@ -182,5 +189,6 @@
     <button onclick="selectTower(wall)">Select Wall</button>
     <button onclick="nextWave()">Start Wave</button>
     <button onclick="turn()">Next turn</button>
+    <button onclick="restartGame()">Restart</button>
 </body>
 </html>
