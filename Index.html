@@ -14,19 +14,10 @@
         }
     </style>
     <script>
-        var waveAmount = 1;
+        var waveAmount = 3;
         var unit1={life:5,position:0,type:1,loot:50},unit2={life:10,position:0,type:2,loot:150},unit3={life:25,position:0,type:3,loot:500};
-        var wave1 = [
-            {spawnTime:1,lane:3,unit:{life:5,position:0,type:1,loot:50}}
-            ,{spawnTime:4,lane:4,unit:{life:5,position:0,type:1,loot:50}}
-            ,{spawnTime:7,lane:2,unit:{life:5,position:0,type:1,loot:50}}
-            ,{spawnTime:10,lane:3,unit:{life:5,position:0,type:1,loot:50}}
-            ,{spawnTime:13,lane:2,unit:{life:5,position:0,type:1,loot:50}}
-        ];
-        var wave2 = [{spawnTime:1,lane:3,unit:unit1},{spawnTime:6,lane:4,unit:unit1},{spawnTime:11,lane:2,unit:unit1},{spawnTime:16,lane:3,unit:unit1},{spawnTime:21,lane:2,unit:unit1}];
-        var wave3 = [{spawnTime:1,lane:3,unit:unit1},{spawnTime:6,lane:4,unit:unit1},{spawnTime:11,lane:2,unit:unit1},{spawnTime:16,lane:3,unit:unit1},{spawnTime:21,lane:2,unit:unit1}];
-        var waves = [wave1];
-        var waveNumber = 0;
+        var waves = [];
+        var waveindexNumber = 0;
         var waveTimer;
         var lives = 5;
         var money = 200;//used to buy towers
@@ -40,18 +31,25 @@
         var towers = [];
         var paused = true;
         var endOfLanes = 6;
+        var pattern1=[3,2,4,3,2,4,3,2,4];
         function restartGame(){
             waves = [];
-            waveNumber=0;
+            waveindexNumber=0;
             towers = [];
             lanes = [[],[],[],[],[]];
-            for (let i = 1; i <= waveAmount; i++) {
-                waves.push(window["wave"+i]);
+            for (let i = 0; i < 3; i++) {
+                waves[i]=[];
+                count=1;
+                for (let index = 0; index < 5; index++) {
+                    waves[i].push({spawnTime:count*3,lane:pattern1[index],unit:{life:5,position:0,type:1,loot:50}})
+                    count++;            
+                }            
             }
             lives = 5;
             money = 200;
             document.getElementById("lifeCounter").innerHTML = lives;
             document.getElementById("moneyCounter").innerHTML = money;
+            clearField();
         }
         function spawnUnit(lane,unit){
             lanes[lane].push(unit);
@@ -69,19 +67,15 @@
         function selectTower(t){
             tower=t;
         }
-        function turn(){//temp
-            gameLoop();
-        }
-        var count=0;
         setInterval(() => {
             document.getElementById("lifeCounter").innerHTML = lives;
             document.getElementById("moneyCounter").innerHTML = money;
-            if (!paused && waveNumber <= waveAmount) {
-                activeWave(waves[waveNumber-1]);     
+            if (!paused && waveindexNumber <= waveAmount) {
+                activeWave(waves[waveindexNumber-1]);     
             }
-        }, 2000);
+        }, 500);
         function nextWave(){
-            waveNumber++;
+            waveindexNumber++;
             waveTimer=0;
             paused=false;
             document.getElementById("nextWaveButton").setAttribute("disabled",true);
@@ -89,8 +83,15 @@
         function gameLoop(){
             document.getElementById("lifeCounter").innerHTML = lives;
             document.getElementById("moneyCounter").innerHTML = money;
-            if (!paused && waveNumber <= waveAmount) {
-                activeWave(waves[waveNumber-1]);     
+            if (!paused && waveindexNumber <= waveAmount) {
+                activeWave(waves[waveindexNumber-1]);     
+            }
+        }
+        function clearField(){
+            for (let k = 0; k < document.getElementsByClassName("laneSlot").length; k++) {
+                document.getElementsByClassName("laneSlot")[k].style.backgroundColor = "black";
+                document.getElementsByClassName("laneSlot")[k].style.color = "red";
+                document.getElementsByClassName("laneSlot")[k].innerHTML = "";                
             }
         }
         function activeWave(wave){
@@ -101,13 +102,13 @@
                     spawnUnit(wave[i].lane,wave[i].unit);
                 }
             }
-            
-            for (let k = 0; k < document.getElementsByClassName("laneSlot").length; k++) {
-                document.getElementsByClassName("laneSlot")[k].style.backgroundColor = "black";
-                document.getElementsByClassName("laneSlot")[k].style.color = "red";
-                document.getElementsByClassName("laneSlot")[k].innerHTML = "";
-                
+            function drawEnemy(laneNumber,indexNumber){
+                document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).style.backgroundColor = "red"; 
+                document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).style.color = "black"; 
+                document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).innerHTML=lanes[laneNumber][indexNumber].life;
+
             }
+            clearField();
             //Enemy unit movement
             for (let i = 0; i < lanes.length; i++) {                
                 var dead=[];
@@ -120,16 +121,20 @@
                         }
                     }
                     if (!attacked){
+                        lanes[i][j].position++;
                         if (lanes[i][j].position==endOfLanes) {
                             lives--;
                             document.getElementById("lifeCounter").innerHTML = lives;
                             dead.push([i,j]);
-                        } else {
-                            lanes[i][j].position++;
+                            if (lives<=0) {
+                                paused = true;
+                                alert("You lose!");
+                            }
                         }
                     }
                     //temp start
                     if (lanes[i][j].position < 6) {
+                        drawEnemy(i,j);
                         document.getElementById("L"+i+"P"+lanes[i][j].position).style.backgroundColor = "red"; 
                         document.getElementById("L"+i+"P"+lanes[i][j].position).style.color = "black"; 
                         document.getElementById("L"+i+"P"+lanes[i][j].position).innerHTML=lanes[i][j].life;
@@ -177,8 +182,6 @@
                     }
                                      
                 } else if (t.type==3) {//pawn
-                    console.log(lanes[t.lane]);
-                    console.log(lanes[t.lane][0]);
                     if (lanes[t.lane][0] != undefined) {
                         lanes[t.lane][0].life = lanes[t.lane][0].life - t.attack;
                         if (lanes[t.lane][0].life <= 0) {
@@ -190,11 +193,16 @@
                 
             }
             //end of wave condition
-            console.log(wave.length);
-            if (wave[wave.length-1].spawnTime+5 < waveTimer) {
-                alert("Wave over!");
+            
+            if (wave[wave.length-1].spawnTime  < waveTimer && lanes[0].length == 0 && lanes[1].length == 0 && lanes[2].length == 0 && lanes[3].length == 0 && lanes[4].length == 0) {
+                console.log(lanes);
                 paused=true;
                 document.getElementById("nextWaveButton").removeAttribute("disabled");
+                clearField();
+                for (let index = 0; index < towers.length; index++) {
+                    var t = towers[index];
+                    document.getElementById("L"+t.lane+"P"+t.position).innerHTML=t.name+" hp:"+t.health;//temp                        
+                }
             }
 
         }
@@ -203,9 +211,12 @@
     </script>
 </head>
 <body onload="restartGame()">
-    <div id="gameWindow">
-        <h3 id="lifeCounter"></h3>
-        <h3 id="moneyCounter"></h3>
+    <div>
+        <canvas id="gameWindow"></canvas>
+        <div>
+            <h3 id="lifeCounter"></h3>
+            <h3 id="moneyCounter"></h3>
+        </div>
         <table id="tempView">
             <tr id="Lane1">
                 <td id="L1P1" class="laneSlot" onclick="placeTower(tower,1,1)"></td>
@@ -249,7 +260,6 @@
     <button onclick="selectTower(pawn)">Select Pawn</button>
     <button onclick="selectTower(wall)">Select Wall</button>
     <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
-    <button onclick="turn()">Next turn</button>
     <button onclick="restartGame()">Restart</button>
 </body>
 </html>
