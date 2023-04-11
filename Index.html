@@ -12,6 +12,8 @@
             color: red;
             background-color: black;
         }
+        #gameWindow{
+        }
     </style>
     <script>
         var waveAmount = 3;
@@ -32,7 +34,99 @@
         var paused = true;
         var endOfLanes = 6;
         var pattern1=[3,2,4,3,2,4,3,2,4];
+        // -------------------------------------------
+        var gameCanvas,c;
+        var tileWidth=100;
+        var tileHeight=50;
+        var tileOffsX=0;
+        var tileOffsY=250;
+        var tileLean=tileWidth/tileHeight;
+        var mx,my;          
+        // Current Hover Tile
+        var hx=0,hy=0,mx=0,my=0;          
+        // Tilemap
+        var tiles=[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]];
+        //Initializations 
+        function init()
+        {  
+              gameCanvas = document.getElementById("gameWindow");
+              c=gameCanvas.getContext("2d");
+      
+              drawTiles();                                                
+        }
+        // Iterate over tile array and draw boxes accordingly
+        function drawTiles()
+        {
+            c.clearRect(0, 0, 1000, 500);          
+              
+            // Redraw Tiles
+            for(cy=0;cy<5;cy++){
+                for(cx=0;cx<10;cx++){
+                    if(tiles[cx][cy]==0){
+                        drawBox(tileOffsX+(tileWidth)*cx,tileOffsY+(cy*tileHeight),"#444","");
+                    }
+                }
+            }        
+        }
+        //Draws a box tile at coordinate X,Y cavas code imported from svg
+        function drawBox(x,y,strokecolor,fillcolor){
+            c.save();
+            c.translate(x,y);
+ 
+            c.strokeStyle = strokecolor;
+            c.fillStyle = fillcolor;
+            c.lineWidth = 1.5;
+            
+            c.globalAlpha = 1.0;
+            c.beginPath();
+            c.moveTo(0,0);
+            c.lineTo(100,0);
+            c.lineTo(100,50);
+            c.lineTo(0,50);
+            c.closePath();
+            
+            if(fillcolor!="") c.fill();
+            if(strokecolor!="") c.stroke();
+ 
+            c.restore();            
+        }
+        function pointerCircle() {
+            c.save();
+ 
+            c.strokeStyle = "black";
+            c.fillStyle = "blue";
+            c.lineWidth = 1.5;
+            
+            c.globalAlpha = 1.0;
+            c.beginPath();
+            c.arc(mx, my, 6, 0, ((Math.PI/180)*360), true); 
+            c.closePath();
+            
+            c.fill();
+            c.stroke();
+ 
+            c.restore();          
+            
+        }
+        function mouseMove(e,t){        
+            var rect = e.target.getBoundingClientRect();
+            mx = e.clientX - rect.left; //x position within the element.
+            my = e.clientY - rect.top;  //y position within the element.
+            c.clearRect(0, 0, 1000, 500);    
+            for(cy=0;cy<5;cy++){
+                for(cx=0;cx<10;cx++){
+                    if(mx >= tileWidth*cx && mx <= tileWidth*(cx+1) && my >= tileOffsY+(tileHeight*(cy)) && my <= tileOffsY+(tileHeight*(cy+1)) ){
+                        drawBox(tileOffsX+(tileWidth)*cx,tileOffsY+(cy*tileHeight),"#444","#222");
+                    }
+                    else{
+                        drawBox(tileOffsX+(tileWidth)*cx,tileOffsY+(cy*tileHeight),"#444","#fff");
+                    }
+                }
+            }
+            pointerCircle();
+        }
         function restartGame(){
+            paused = true;
             waves = [];
             waveindexNumber=0;
             towers = [];
@@ -94,6 +188,13 @@
                 document.getElementsByClassName("laneSlot")[k].innerHTML = "";                
             }
         }
+        
+        function drawEnemy(laneNumber,indexNumber){
+            document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).style.backgroundColor = "red"; 
+            document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).style.color = "black"; 
+            document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).innerHTML=lanes[laneNumber][indexNumber].life;
+
+        }
         function activeWave(wave){
             waveTimer++;
             //enemy spawn
@@ -101,12 +202,6 @@
                 if (wave[i].spawnTime==waveTimer) {
                     spawnUnit(wave[i].lane,wave[i].unit);
                 }
-            }
-            function drawEnemy(laneNumber,indexNumber){
-                document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).style.backgroundColor = "red"; 
-                document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).style.color = "black"; 
-                document.getElementById("L"+laneNumber+"P"+lanes[laneNumber][indexNumber].position).innerHTML=lanes[laneNumber][indexNumber].life;
-
             }
             clearField();
             //Enemy unit movement
@@ -126,14 +221,10 @@
                             lives--;
                             document.getElementById("lifeCounter").innerHTML = lives;
                             dead.push([i,j]);
-                            if (lives<=0) {
-                                paused = true;
-                                alert("You lose!");
-                            }
                         }
                     }
                     //temp start
-                    if (lanes[i][j].position < 6) {
+                    if (lanes[i][j].position < endOfLanes) {
                         drawEnemy(i,j);
                         document.getElementById("L"+i+"P"+lanes[i][j].position).style.backgroundColor = "red"; 
                         document.getElementById("L"+i+"P"+lanes[i][j].position).style.color = "black"; 
@@ -144,7 +235,7 @@
                 for (let j = 0; j < dead.length; j++) {
                     lanes[dead[j][0]].splice(dead[j][1],1);
                 }
-
+                
             }
             for (let i = 0; i < towers.length; i++) {
                 var t = towers[i];
@@ -192,6 +283,11 @@
                 }
                 
             }
+            if (lives<=0) {
+                if (confirm("Play again?")) {
+                    restartGame();
+                }
+            }
             //end of wave condition
             
             if (wave[wave.length-1].spawnTime  < waveTimer && lanes[0].length == 0 && lanes[1].length == 0 && lanes[2].length == 0 && lanes[3].length == 0 && lanes[4].length == 0) {
@@ -210,9 +306,9 @@
         //disable next wave during waves
     </script>
 </head>
-<body onload="restartGame()">
+<body onload="restartGame();init();">
     <div>
-        <canvas id="gameWindow"></canvas>
+        <canvas id="gameWindow" width="1000" height="500" onmousemove="mouseMove(event,this)" onmousedown=""></canvas>
         <div>
             <h3 id="lifeCounter"></h3>
             <h3 id="moneyCounter"></h3>
@@ -260,6 +356,6 @@
     <button onclick="selectTower(pawn)">Select Pawn</button>
     <button onclick="selectTower(wall)">Select Wall</button>
     <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
-    <button onclick="restartGame()">Restart</button>
+    <!--<button onclick="restartGame()">Restart</button>-->
 </body>
 </html>
