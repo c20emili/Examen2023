@@ -33,16 +33,18 @@
         var lanes = [[],[],[],[],[]];//the lanes on the gamefield
         // unit = {life,position,type};
         var tower;
-        var rook={name:"Rook",health:3,lane:0,position:0,type:1,attack:1,cost:200,note:"Attacks all enemies in it's lane"};
-        var bishop={name:"Bishop",health:3,lane:0,position:0,type:2,attack:2,cost:100,note:"Attacks the first enemies in the lanes next to it"};
-        var pawn={name:"Pawn",health:3,lane:0,position:0,type:3,attack:2,cost:50,note:"Attacks the first enemy in it's lane"};
-        var wall={name:"Wall",health:15,lane:0,position:0,type:4,attack:0,cost:100,note:"Do not attack but have high health"};
-        var towers=[];
-        var paused=true;
+        var rook = {name:"Rook",health:3,lane:0,position:0,type:1,attack:1,cost:200,note:"Attacks all enemies in it's lane"};
+        var bishop = {name:"Bishop",health:3,lane:0,position:0,type:2,attack:2,cost:100,note:"Attacks the first enemies in the lanes next to it"};
+        var pawn = {name:"Pawn",health:3,lane:0,position:0,type:3,attack:2,cost:50,note:"Attacks the first enemy in it's lane"};
+        var wall = {name:"Wall",health:15,lane:0,position:0,type:4,attack:0,cost:100,note:"Do not attack but have high health"};
+        var towers = [];
+        var paused = true;
         var endOfLanes = 6;
         function restartGame(){
             waves = [];
             waveNumber=0;
+            towers = [];
+            lanes = [[],[],[],[],[]];
             for (let i = 1; i <= waveAmount; i++) {
                 waves.push(window["wave"+i]);
             }
@@ -56,20 +58,7 @@
         }
         function placeTower(tower,l,pos){
             if (money>=tower.cost) {
-                if (tower.type == 1) {
-                    var t = {name:"Rook",health:3,lane:0,position:0,type:1,attack:1,cost:200,note:"Attacks all enemies in it's lane"};
-                }
-                else if (tower.type == 2) {
-                    var t = {name:"Bishop",health:3,lane:0,position:0,type:2,attack:2,cost:100,note:"Attacks the first enemies in the lanes next to it"};
-                }
-                else if (tower.type == 3) {
-                    var t = {name:"Pawn",health:3,lane:0,position:0,type:3,attack:2,cost:50,note:"Attacks the first enemy in it's lane"};
-                }
-                else if (tower.type == 4) {
-                    var t = {name:"Wall",health:15,lane:0,position:0,type:4,attack:0,cost:100,note:"Do not attack but have high health"};
-                }
-                t.lane=l;
-                t.position=pos;
+                var t = {name:tower.name,health:tower.health,lane:l,position:pos,type:tower.type,attack:tower.attack,cost:tower.cost,note:tower.note};
                 towers.push(t);
                 document.getElementById("L"+l+"P"+pos).innerHTML=tower.name+" hp:"+tower.health;//temp
                 money=money-tower.cost;
@@ -83,12 +72,19 @@
         function turn(){//temp
             gameLoop();
         }
+        var count=0;
+        setInterval(() => {
+            document.getElementById("lifeCounter").innerHTML = lives;
+            document.getElementById("moneyCounter").innerHTML = money;
+            if (!paused && waveNumber <= waveAmount) {
+                activeWave(waves[waveNumber-1]);     
+            }
+        }, 2000);
         function nextWave(){
             waveNumber++;
             waveTimer=0;
             paused=false;
             document.getElementById("nextWaveButton").setAttribute("disabled",true);
-
         }
         function gameLoop(){
             document.getElementById("lifeCounter").innerHTML = lives;
