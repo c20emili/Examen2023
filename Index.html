@@ -35,7 +35,7 @@
         var towers = [];
         var paused = true;
         var endOfLanes = 1001;
-        var pattern1 = [3,2,4,3,2,4,3,2,4];
+        var pattern1 = [3,2,4,3,2,4,3,2,4,3,2,4,3,2,4,3,2,4,3,2,4];
         var tileSelected = [];
         // -------------------------------------------
         var gameCanvas,c;
@@ -194,7 +194,7 @@
             for (let i = 0; i < 3; i++) {
                 waves[i]=[];
                 count=1;
-                for (let index = 0; index < 5; index++) {
+                for (let index = 0; index < 10; index++) {
                     waves[i].push({spawnTime:count*300,lane:pattern1[index],unit:{life:5,position:0,type:1,loot:50}})
                     count++;            
                 }            
@@ -291,6 +291,9 @@
                             if (waveTimer%200 == 0) {
                                 towers[k].health--;
                                 if (towers[k].health == 0) {
+                                    console.log(towers[k].position-1)
+                                    console.log(towers[k].lane-1)
+                                    tiles[towers[k].position-1][towers[k].lane-1] = 0;
                                     towers.splice(k,1);
                                 }
                             }
@@ -360,8 +363,7 @@
                     }
                                      
                 } else if (t.type==3) {//pawn
-                    if (lanes[t.lane][0] != undefined) { 
-                        console.log(waveTimer%(t.atkSpeed*200));         
+                    if (lanes[t.lane][0] != undefined) {     
                         if (waveTimer%(t.atkSpeed*200) == 0) {
                             lanes[t.lane][0].life = lanes[t.lane][0].life - t.attack;
                         }
