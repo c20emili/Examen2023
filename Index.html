@@ -290,6 +290,9 @@
                                 attacked=true;
                             if (waveTimer%200 == 0) {
                                 towers[k].health--;
+                                if (towers[k].health == 0) {
+                                    towers.splice(k,1);
+                                }
                             }
                         }
                     }
