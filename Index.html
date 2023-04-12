@@ -227,7 +227,7 @@
             if (money>=tower.cost) {
                 tiles[pos-1][l-1] = tower.type;
                 console.log(tiles[pos-1][l-1]);
-                var t = {name:tower.name,health:tower.health,lane:l,position:pos,type:tower.type,attack:tower.attack,cost:tower.cost,note:tower.note};
+                var t = {name:tower.name,health:tower.health,lane:l,position:pos,type:tower.type,attack:tower.attack,atkSpeed:tower.atkSpeed,cost:tower.cost,note:tower.note};
                 towers.push(t);
                 //document.getElementById("L"+l+"P"+pos).innerHTML=tower.name+" hp:"+tower.health;//temp
                 money=money-tower.cost;
@@ -286,9 +286,11 @@
                 for (let j = 0; j < lanes[i].length; j++) {
                     var attacked=false;
                     for (let k = 0; k < towers.length; k++) {
-                        if (lanes[i][j].position==towers[k].position*100-1 && i == towers[k].lane) {
-                            towers[k].health--;
-                            attacked=true;
+                        if (lanes[i][j].position==towers[k].position*100-101 && i == towers[k].lane) {
+                                attacked=true;
+                            if (waveTimer%200 == 0) {
+                                towers[k].health--;
+                            }
                         }
                     }
                     if (!attacked){
@@ -319,7 +321,7 @@
                 if (t.type==1) {//rook
                     var dead=[];
                     for (let j = 0; j < lanes[t.lane].length; j++) {
-                        if (waveTimer == t.atkSpeed*200) {
+                        if (waveTimer%(t.atkSpeed*200) == 0) {
                             lanes[t.lane][j].life = lanes[t.lane][j].life - t.attack;
                         }
                         if(lanes[t.lane][j].life <= 0) {
@@ -333,7 +335,7 @@
                 } else if (t.type==2) {//bishop
                     if (lanes[t.lane+1]) {
                         if (lanes[t.lane+1][0]) {
-                            if (waveTimer == t.atkSpeed*200) {
+                            if (waveTimer%(t.atkSpeed*200) == 0) {
                                 lanes[t.lane+1][0].life = lanes[t.lane+1][0].life - t.attack;
                             }
                             if (lanes[t.lane+1][0].life <= 0) {
@@ -344,7 +346,7 @@
                     }
                     if (lanes[t.lane-1]) {
                         if (lanes[t.lane-1][0]) {                            
-                            if (waveTimer == t.atkSpeed*200) {
+                            if (waveTimer%(t.atkSpeed*200) == 0) {
                                 lanes[t.lane-1][0].life = lanes[t.lane-1][0].life - t.attack;
                             }
                             if (lanes[t.lane-1][0].life <= 0) {
@@ -355,8 +357,9 @@
                     }
                                      
                 } else if (t.type==3) {//pawn
-                    if (lanes[t.lane][0] != undefined) {                        
-                        if (waveTimer == t.atkSpeed*200) {
+                    if (lanes[t.lane][0] != undefined) { 
+                        console.log(waveTimer%(t.atkSpeed*200));         
+                        if (waveTimer%(t.atkSpeed*200) == 0) {
                             lanes[t.lane][0].life = lanes[t.lane][0].life - t.attack;
                         }
                         if (lanes[t.lane][0].life <= 0) {
