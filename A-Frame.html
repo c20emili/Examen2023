@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Frame</title>
+    <script src="logic.js"></script>
+</head>
+<body onload="restartGame();init();">
+    <div>
+        <h3 id="lifeCounter"></h3>
+        <h3 id="moneyCounter"></h3>
+        <canvas id="gameWindow" width="1000" height="250" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
+    </div>
+    <button onclick="selectTower(rook)">Select Rook</button>
+    <button onclick="selectTower(bishop)">Select Bishop</button>
+    <button onclick="selectTower(pawn)">Select Pawn</button>
+    <button onclick="selectTower(wall)">Select Wall</button>
+    <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
+</body>
+</html>
