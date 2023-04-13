@@ -187,7 +187,7 @@
                 waves[i]=[];
                 count=1;
                 for (let index = 0; index < 10; index++) {
-                    waves[i].push({spawnTime:count*300,lane:pattern1[index],unit:{life:5,position:0,type:1,loot:50}})
+                    waves[i].push({spawnTime:count*250,lane:pattern1[index],unit:{life:5,position:0,type:1,loot:50}})
                     count++;            
                 }            
             }
@@ -452,7 +452,7 @@
                         }
                         scene.appendChild(object3D);
                         const smallObject3D =  document.createElement("a-entity");
-                        smallObject3D.setAttribute("id","lane"+t.lane+"tower"+t.position);
+                        smallObject3D.setAttribute("id","lane"+t.lane+"towerTop"+t.position);
                         smallObject3D.setAttribute("geometry","primitive:cylinder; radius:0.5;");
                         smallObject3D.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -29.5");
                         smallObject3D.setAttribute("rotation","90 0 0");
@@ -490,7 +490,10 @@
                             enemyObject3D.setAttribute("geometry","primitive:box;");
                             enemyObject3D.setAttribute("material","color: #4CD3D9");
                             scene.appendChild(enemyObject3D);  
-                        }       
+                        }
+                        if(j == lanes[i].length - 1 && document.getElementById("lane"+i+"unit"+(j+1))) {
+                            scene.removeChild(document.getElementById("lane"+i+"unit"+(j+1)));
+                        }   
                     }
                 }
                 
