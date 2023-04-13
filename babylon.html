@@ -5,18 +5,108 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Babylon</title>
+    <!-- Babylon.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.6.2/dat.gui.min.js"></script>
+    <script src="https://assets.babylonjs.com/generated/Assets.js"></script>
+    <script src="https://preview.babylonjs.com/ammo.js"></script>
+    <script src="https://preview.babylonjs.com/cannon.js"></script>
+    <script src="https://preview.babylonjs.com/Oimo.js"></script>
+    <script src="https://preview.babylonjs.com/earcut.min.js"></script>
+    <script src="https://preview.babylonjs.com/babylon.js"></script>
+    <script src="https://preview.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
+    <script src="https://preview.babylonjs.com/proceduralTexturesLibrary/babylonjs.proceduralTextures.min.js"></script>
+    <script src="https://preview.babylonjs.com/postProcessesLibrary/babylonjs.postProcess.min.js"></script>
+    <script src="https://preview.babylonjs.com/loaders/babylonjs.loaders.js"></script>
+    <script src="https://preview.babylonjs.com/serializers/babylonjs.serializers.min.js"></script>
+    <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+    <script src="https://preview.babylonjs.com/inspector/babylon.inspector.bundle.js"></script>
+    <!-- Own script -->
     <script src="logic.js"></script>
+    <style>
+        #gameWindow{
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 50%;
+        }
+        #renderCanvas{
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
 </head>
-<body onload="restartGame();init();">
+<!--  -->
+<body onload="restartGame();init2DGraphics();">
     <div>
-        <h3 id="lifeCounter"></h3>
-        <h3 id="moneyCounter"></h3>
-        <canvas id="gameWindow" width="1000" height="250" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
+        <h3 id="lifeCounter">5</h3>
+        <h3 id="moneyCounter">200</h3>
+        <canvas id="renderCanvas" width="1000" height="250" touch-action="none"></canvas>
+        <canvas id="gameWindow" width="1000" height="500" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
+        <button onclick="selectTower(rook)">Select Rook</button>
+        <button onclick="selectTower(bishop)">Select Bishop</button>
+        <button onclick="selectTower(pawn)">Select Pawn</button>
+        <button onclick="selectTower(wall)">Select Wall</button>
+        <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
     </div>
-    <button onclick="selectTower(rook)">Select Rook</button>
-    <button onclick="selectTower(bishop)">Select Bishop</button>
-    <button onclick="selectTower(pawn)">Select Pawn</button>
-    <button onclick="selectTower(wall)">Select Wall</button>
-    <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
+    
+    <script>
+        var canvas = document.getElementById("renderCanvas");
+
+        var startRenderLoop = function (engine, canvas) {
+            engine.runRenderLoop(function () {
+                if (sceneToRender && sceneToRender.activeCamera) {
+                    sceneToRender.render();
+                }
+            });
+        }
+
+        var engine = null;
+        var scene = null;
+        var sceneToRender = null;
+        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+        var createScene = function () {
+            // This creates a basic Babylon Scene object (non-mesh)
+            var scene = new BABYLON.Scene(engine);
+            
+            var camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 3, new BABYLON.Vector3(0, 0, 0), scene);
+
+            // This attaches the camera to the canvas
+            camera.attachControl(canvas, true);
+
+            // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
+            var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Default intensity is 1. Let's dim the light a small amount
+            light.intensity = 0.7;            
+
+            const box = BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+
+            return scene;
+        };
+        window.initFunction = async function() {
+            var asyncEngineCreation = async function() {
+                try {
+                    return createDefaultEngine();
+                } 
+                catch(e) {
+                    console.log("the available createEngine function failed. Creating the default engine instead");
+                    return createDefaultEngine();
+                }
+            }
+            window.engine = await asyncEngineCreation();
+            if (!engine) throw 'engine should not be null.';
+            startRenderLoop(engine, canvas);
+            window.scene = createScene();
+        };
+        initFunction().then(() => {
+            sceneToRender = scene                    
+        });
+
+        // Resize
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
 </body>
 </html>
