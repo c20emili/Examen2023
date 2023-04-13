@@ -428,33 +428,59 @@
             if (!stopped) {
                 for (let i = 0; i < towers.length; i++) {
                     var t = towers[i];
-                    const object3D =  document.createElement("a-entity");
-                    object3D.setAttribute("geometry","primitive:cylinder;");
-                    object3D.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -30");
-                    object3D.setAttribute("rotation","90 0 0");
-                    switch (t.type) {
-                        case 1:
-                            object3D.setAttribute("material","color: blue");                    
-                            break;
-                        case 2:
-                            object3D.setAttribute("material","color: green");                     
-                            break;
-                        case 3:
-                            object3D.setAttribute("material","color: red");                     
-                            break;
-                        case 4:
-                            object3D.setAttribute("material","color: purple");                     
-                            break;
-                        default:
-                            break;
-                    }
-                    scene.appendChild(object3D);                        
+                    if (!document.getElementById("lane"+t.lane+"tower"+t.position)) {
+                        const object3D =  document.createElement("a-entity");
+                        object3D.setAttribute("id","lane"+t.lane+"tower"+t.position);
+                        object3D.setAttribute("geometry","primitive:cylinder; height:0.2;");
+                        object3D.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -30");
+                        object3D.setAttribute("rotation","90 0 0");
+                        switch (t.type) {
+                            case 1:
+                                object3D.setAttribute("material","color: lightblue");                    
+                                break;
+                            case 2:
+                                object3D.setAttribute("material","color: lightgreen");                     
+                                break;
+                            case 3:
+                                object3D.setAttribute("material","color: pink");                     
+                                break;
+                            case 4:
+                                object3D.setAttribute("material","color: cerise");                     
+                                break;
+                            default:
+                                break;
+                        }
+                        scene.appendChild(object3D);
+                        const smallObject3D =  document.createElement("a-entity");
+                        smallObject3D.setAttribute("id","lane"+t.lane+"tower"+t.position);
+                        smallObject3D.setAttribute("geometry","primitive:cylinder; radius:0.5;");
+                        smallObject3D.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -29.5");
+                        smallObject3D.setAttribute("rotation","90 0 0");
+                        switch (t.type) {
+                            case 1:
+                                smallObject3D.setAttribute("material","color: blue");                    
+                                break;
+                            case 2:
+                                smallObject3D.setAttribute("material","color: green");                     
+                                break;
+                            case 3:
+                                smallObject3D.setAttribute("material","color: red");                     
+                                break;
+                            case 4:
+                                smallObject3D.setAttribute("material","color: purple");                     
+                                break;
+                            default:
+                                break;
+                        }
+                        scene.appendChild(smallObject3D);                      
+                    }                      
                 }
                 for (let i = 0; i < lanes.length; i++) {
                     for (let j = 0; j < lanes[i].length; j++) {
                         if (document.getElementById("lane"+i+"unit"+j)) {
                             var enemyObject3D = document.getElementById("lane"+i+"unit"+j);
                             var pos = (-48.5+0.052*lanes[i][j].position);
+                            enemyObject3D.setAttribute("geometry","primitive:box; height:"+(0.5+0.001*lanes[i][j].position%200)+"; width:"+(0.5+0.001*lanes[i][j].position%200)+"; depth:"+(0.5+0.001*lanes[i][j].position%200)+";");
                             enemyObject3D.setAttribute("position",pos + " " + lanes3D[i] + " -30");
                             enemyObject3D.setAttribute("rotation",(lanes[i][j].position%360) + " " + (lanes[i][j].position%360) + " " + (lanes[i][j].position%360));  
                         }
