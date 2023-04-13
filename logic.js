@@ -194,12 +194,10 @@ function spawnUnit(lane,unit){
 function placeTower(tower,l,pos){
     if (money>=tower.cost) {
         tiles[pos-1][l-1] = tower.type;
-        console.log(tiles[pos-1][l-1]);
         var t = {name:tower.name,health:tower.health,lane:l,position:pos,type:tower.type,attack:tower.attack,atkSpeed:tower.atkSpeed,cost:tower.cost,note:tower.note};
         towers.push(t);
         money=money - tower.cost;
     }
-
 }
 
 function selectTower(t){
@@ -338,5 +336,4 @@ function activeWave(wave){
             var t = towers[index];                 
         }
     }
-
 }
