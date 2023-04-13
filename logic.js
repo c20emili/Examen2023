@@ -101,7 +101,7 @@ function drawUnit(u,lane) {
     ypos = 50*lane-5;
     c.globalAlpha = 1.0;
     c.beginPath();
-    c.rect(u.position, ypos,u.life*10,10);
+    c.rect(u.position, ypos,u.life*10,5);
     c.closePath();
     
     c.fill();

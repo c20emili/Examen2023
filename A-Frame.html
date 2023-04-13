@@ -16,27 +16,68 @@
             left: 0;
             opacity: 50%;
         }
+        #protection{            
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        #lifeCounter{
+            position: absolute;
+            top: 25vh;
+            left: 1vw;
+            right: 5vw;
+        }
+        #moneyCounter{
+            position: absolute;
+            top: 25vh;
+            left: 5vw;
+            right: 10vw;
+        }
+        #buttons{
+            position: absolute;
+            top: 30vh;
+            left: 0;
+            right: 100;
+
+        }
     </style>
 </head>
 <body onload="restartGame();init2DGraphics();">
     <div>
-        <a-scene>
-            <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
-            <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E"></a-sphere>
-            <a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>
-            <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
-            <a-sky color="#ECECEC"></a-sky>
+        <a-scene id="scene">
+            <!--<a-entity id="box3" geometry="primitive:box; width:1.5; height:1.5; depth:1.5;" position="0 20.3 -30" rotation="0 0 0" material = "color: #EF2D5E"></a-entity>
+            <a-entity id="box4" geometry="primitive:box; width:1.5; height:1.5; depth:1.5;" position="0 17.7 -30" rotation="0 0 0" material = "color: #EF2D5E"></a-entity>
+            <a-entity id="box5" geometry="primitive:box; width:1.5; height:1.5; depth:1.5;" position="0 15.1 -30" rotation="0 0 0" material = "color: #EF2D5E"></a-entity>-->
+            <a-sphere position="-46.5 12.5 -30" radius="0.5" color="#D9C3D9"></a-sphere>
         </a-scene>
-    </div>
-    <div>
-        <h3 id="lifeCounter"></h3>
-        <h3 id="moneyCounter"></h3>
+        <div id="protection"></div>
         <canvas id="gameWindow" width="1000" height="250" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
     </div>
-    <button onclick="selectTower(rook)">Select Rook</button>
-    <button onclick="selectTower(bishop)">Select Bishop</button>
-    <button onclick="selectTower(pawn)">Select Pawn</button>
-    <button onclick="selectTower(wall)">Select Wall</button>
-    <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
+        <h3 id="lifeCounter"></h3>
+        <h3 id="moneyCounter"></h3>
+    <div id="buttons">
+        <button onclick="selectTower(rook)">Select Rook</button>
+        <button onclick="selectTower(bishop)">Select Bishop</button>
+        <button onclick="selectTower(pawn)">Select Pawn</button>
+        <button onclick="selectTower(wall)">Select Wall</button>
+        <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
+    </div>
+    <script>
+        var lanes3D = [25.5, 22.9, 20.3, 17.7, 15.1];
+        var towerPositions3D = [0,-5.5,-10.5,-15.5,-21,-26,-32,-37,-43,-48];
+        const scene = document.getElementById("scene");
+        /*for (let i = 0; i < 5; i++) {
+            for (let j = 0; j < 10; j++) {                
+                const object3D =  document.createElement("a-entity");
+                object3D.setAttribute("geometry","primitive:box; width:1.5; height:1.5; depth:1.5;");
+                object3D.setAttribute("position",towerPositions3D[j]+" "+lanes3D[i]+" -30");
+                object3D.setAttribute("rotation","0 0 0");
+                object3D.setAttribute("material","color: #EF2D5E");
+                scene.appendChild(object3D);                
+            }            
+        }*/
+    </script>
 </body>
 </html>

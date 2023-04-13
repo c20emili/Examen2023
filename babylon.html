@@ -38,11 +38,11 @@
 </head>
 <!--  -->
 <body onload="restartGame();init2DGraphics();">
+    <canvas id="renderCanvas" width="1000" height="250" touch-action="none"></canvas>
+    <canvas id="gameWindow" width="1000" height="500" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
     <div>
         <h3 id="lifeCounter">5</h3>
         <h3 id="moneyCounter">200</h3>
-        <canvas id="renderCanvas" width="1000" height="250" touch-action="none"></canvas>
-        <canvas id="gameWindow" width="1000" height="500" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
         <button onclick="selectTower(rook)">Select Rook</button>
         <button onclick="selectTower(bishop)">Select Bishop</button>
         <button onclick="selectTower(pawn)">Select Pawn</button>
