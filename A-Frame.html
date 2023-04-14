@@ -257,6 +257,8 @@
                                         console.log(towers[k].position-1)
                                         console.log(towers[k].lane-1)
                                         tiles[towers[k].position-1][towers[k].lane-1] = 0;
+                                        document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"towerTop"+towers[k].position));
+                                        document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"tower"+towers[k].position));
                                         towers.splice(k,1);
                                     }
                                 }
