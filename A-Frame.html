@@ -26,8 +26,8 @@
         var towers = [];
         var paused = true;
         var endOfLanes = 1001;
-        //var pattern1 = [3,2,4,3,2,4,3,2,4,3,2,4,3,2,4,3,2,4,3,2,4];
-        var pattern1 = [0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4];
+        var pattern1 = [2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,];
+        //var pattern1 = [0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4];
         var tileSelected = [];
         // -------------------------------------------
         var gameCanvas,c;
@@ -254,8 +254,6 @@
                                 if (waveTimer%200 == 0) {
                                     towers[k].health--;
                                     if (towers[k].health == 0) {
-                                        console.log(towers[k].position-1)
-                                        console.log(towers[k].lane-1)
                                         tiles[towers[k].position-1][towers[k].lane-1] = 0;
                                         document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"towerTop"+towers[k].position));
                                         document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"tower"+towers[k].position));
@@ -455,7 +453,7 @@
                         scene.appendChild(object3D);
                         const smallObject3D =  document.createElement("a-entity");
                         smallObject3D.setAttribute("id","lane"+t.lane+"towerTop"+t.position);
-                        smallObject3D.setAttribute("geometry","primitive:cylinder; radius:0.5; height:"+t.health*0.3+";");
+                        smallObject3D.setAttribute("geometry","primitive:cylinder; radius:0.5; height:1;");
                         smallObject3D.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -29.5");
                         smallObject3D.setAttribute("rotation","90 0 0");
                         switch (t.type) {
@@ -469,7 +467,8 @@
                                 smallObject3D.setAttribute("material","color: red");                     
                                 break;
                             case 4:
-                                smallObject3D.setAttribute("material","color: purple");                     
+                                smallObject3D.setAttribute("material","color: purple");
+                                smallObject3D.setAttribute("geometry","primitive:cylinder; radius:0.5; height:"+t.health*0.5+";");
                                 break;
                             default:
                                 break;
@@ -477,7 +476,17 @@
                         scene.appendChild(smallObject3D);                      
                     }
                     else{
-                        document.getElementById("lane"+t.lane+"towerTop"+t.position).setAttribute("geometry","primitive:cylinder; radius:0.5; height:"+t.health*0.3+";");
+                        var healthMultiplier;
+                        switch (t.type) {
+                            case 4:
+                                healthMultiplier=1/25;
+                                break;
+                            default:
+                                healthMultiplier=1/3;
+                                break;
+                        }
+                        
+                        document.getElementById("lane"+t.lane+"towerTop"+t.position).setAttribute("geometry","primitive:cylinder; radius:0.5; height:"+t.health*healthMultiplier+";");
                     }                
                 }
                 for (let i = 0; i < lanes.length; i++) {
