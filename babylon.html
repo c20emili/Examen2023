@@ -25,7 +25,7 @@
     <style>        
         #gameWindow{
             position: absolute;
-            top: 0;
+            top: 1vh;
             left: 0;
             opacity: 50%;
         }
@@ -97,9 +97,49 @@
             var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
             // Default intensity is 1. Let's dim the light a small amount
-            light.intensity = 0.7;            
+            light.intensity = 0.7;
+            const animBox = new BABYLON.Animation("boxAnimation", "position.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE); 
+            const animBoxSpinx = new BABYLON.Animation("boxAnimation", "rotation.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);  
+            const animBoxSpiny = new BABYLON.Animation("boxAnimation", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);  
+            const animBoxSpinz = new BABYLON.Animation("boxAnimation", "rotation.z", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);        
+            var box = [];
+            for (let i = 0; i < 5; i++) {
+                box[i] = new BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+                box[i].scaling = new BABYLON.Vector3(0.2,0.2,0.2);
+                box[i].position = new BABYLON.Vector3(0,1-i/1.75,0);
+                console.log(box[i]);
+                const boxKeys = []; 
+                boxKeys.push({
+                    frame: 0+i*20,
+                    value: -10
+                });
 
-            const box = BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+                boxKeys.push({
+                    frame: 250+i*20,
+                    value: 20
+                });
+                const boxKeysSpin = [];
+                boxKeysSpin.push({
+                    frame: 0,
+                    value: 0
+                });
+
+                boxKeysSpin.push({
+                    frame: 250,
+                    value: 36
+                });
+                box[i].animations = [];
+                box[i].animations.push(animBox);
+                box[i].animations.push(animBoxSpinx);
+                box[i].animations.push(animBoxSpiny);
+                box[i].animations.push(animBoxSpinz);
+                animBox.setKeys(boxKeys);
+                animBoxSpinx.setKeys(boxKeysSpin);
+                animBoxSpiny.setKeys(boxKeysSpin);
+                animBoxSpinz.setKeys(boxKeysSpin);
+
+                scene.beginAnimation(box[i], 0, 250, true);
+            }
 
             return scene;
         };
