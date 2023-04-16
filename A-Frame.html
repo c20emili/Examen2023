@@ -29,6 +29,19 @@
         var pattern1 = [2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,];
         //var pattern1 = [0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4];
         var tileSelected = [];
+        var frames = 0;
+        var data = [];
+        var testSerie = 0;
+        function measureFrames(){
+            console.log(data);
+            testSerie++;
+            var dataPoint = frames;
+            data.push(dataPoint);
+            frames = 0;
+        }
+        setInterval(() => {
+            measureFrames();
+        }, 1000);
         // -------------------------------------------
         var gameCanvas,c;
         var tileWidth=100;
@@ -410,7 +423,7 @@
         <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
     </div>
     <script>
-        var stopped=false;
+        var stopped = false;
         function toggle(p) {
             return !p;
         }
@@ -425,6 +438,7 @@
         var towerPositions3D = [0,-5.5,-10.5,-15.5,-21,-26,-32,-37,-43,-48];
         const scene = document.getElementById("scene");
         setInterval(() => {
+            frames++;
             if (!stopped) {
                 for (let i = 0; i < towers.length; i++) {
                     var t = towers[i];
