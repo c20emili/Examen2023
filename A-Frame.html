@@ -40,7 +40,9 @@
             frames = 0;
         }
         setInterval(() => {
-            measureFrames();
+            if (!paused) {
+                measureFrames();
+            }
         }, 1000);
         // -------------------------------------------
         var gameCanvas,c;
