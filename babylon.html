@@ -239,6 +239,8 @@
                 var t = {name:tower.name,health:tower.health,lane:l,position:pos,type:tower.type,attack:tower.attack,atkSpeed:tower.atkSpeed,cost:tower.cost,note:tower.note};
                 towers.push(t);
                 money=money - tower.cost;
+                towerCylinders[l][pos][0].position.x = -5 + pos + 0.5;
+                towerCylinders[l][pos][1].position.x = -5 + pos + 0.5;
             }
         }
 
@@ -296,7 +298,9 @@
                                 if (waveTimer%200 == 0) {
                                     towers[k].health--;
                                     if (towers[k].health == 0) {
-                                        tiles[towers[k].position-1][towers[k].lane-1] = 0;
+                                        tiles[towers[k].position][towers[k].lane] = 0;
+                                        towerCylinders[towers[k].lane][towers[k].position][0].position.x = -6;
+                                        towerCylinders[towers[k].lane][towers[k].position][1].position.x = -6;
                                         towers.splice(k,1);
                                     }
                                 }
@@ -508,6 +512,7 @@
         var scene = null;
         var sceneToRender = null;
         var boxUnits = [];
+        var towerCylinders=[];
         var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
         var createScene = function () {
             var scene = new BABYLON.Scene(engine);// create a basic Babylon Scene object          
@@ -525,7 +530,6 @@
                     boxUnits[i][j] = new BABYLON.MeshBuilder.CreateBox("box", {}, scene);
                     boxUnits[i][j].scaling = new BABYLON.Vector3(0.2,0.2,0.2);
                     boxUnits[i][j].position = new BABYLON.Vector3(-6,1-waves[i][j].lane/2,0);//unitbox position
-                    //boxUnits[i][j].position.x = -8 + 1000 * 0.016;
                     const boxKeysSpin = [];
                     boxKeysSpin.push({
                         frame: 0,
@@ -544,6 +548,21 @@
                     animBoxSpiny.setKeys(boxKeysSpin);
                     animBoxSpinz.setKeys(boxKeysSpin);
                     scene.beginAnimation(boxUnits[i][j], 0, 250, true);
+                }                
+            }
+            for (let i = 0; i < 5; i++) {
+                towerCylinders.push([]);
+                for (let j = 0; j < 10; j++) {
+                    towerCylinders[i].push([]);
+                    towerCylinders[i][j][0] = new BABYLON.MeshBuilder.CreateCylinder("cylinder", {}, scene);
+                    towerCylinders[i][j][0].scaling = new BABYLON.Vector3(0.2,0.2,0.2);     
+                    towerCylinders[i][j][0].rotation = new BABYLON.Vector3(-0.8,0,0);
+                    towerCylinders[i][j][0].position = new BABYLON.Vector3(-6,1.2-i/2,-0.2);
+                    towerCylinders[i][j][1] = new BABYLON.MeshBuilder.CreateCylinder("cylinder", {}, scene);
+                    towerCylinders[i][j][1].scaling = new BABYLON.Vector3(0.4,0.05,0.4);     
+                    towerCylinders[i][j][1].rotation = new BABYLON.Vector3(-0.8,0,0);
+                    towerCylinders[i][j][1].position = new BABYLON.Vector3(-6,1-i/2,0);
+
                 }                
             }
             return scene;
