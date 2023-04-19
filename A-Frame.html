@@ -208,7 +208,7 @@
                 waves[i]=[];
                 count=1;
                 for (let index = 0; index < 10; index++) {
-                    waves[i].push({spawnTime:count*250,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50}})
+                    waves[i].push({spawnTime:count*150,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50}})
                     count++;            
                 }            
             }
@@ -313,7 +313,7 @@
                     if (t.type==1) {//rook
                         var dead=[];
                         for (let j = 0; j < lanes[t.lane].length; j++) {
-                            if (waveTimer%(t.atkSpeed*200) == 0) {
+                            if (waveTimer%(t.atkSpeed*100) == 0) {
                                 lanes[t.lane-1][j].life = lanes[t.lane-1][j].life - t.attack;
                             }
                             if(lanes[t.lane-1][j].life <= 0) {
@@ -328,7 +328,7 @@
                     } else if (t.type==2) {//bishop
                         if (lanes[t.lane]) {
                             if (lanes[t.lane] .length>= 1) {
-                                if (waveTimer%(t.atkSpeed*200) == 0) {
+                                if (waveTimer%(t.atkSpeed*100) == 0) {
                                     lanes[t.lane][0].life = lanes[t.lane+1][0].life - t.attack;
                                 }
                                 if (lanes[t.lane][0].life <= 0) {
@@ -340,7 +340,7 @@
                         }
                         if (lanes[t.lane-2]) {
                             if (lanes[t.lane-2].length >= 1) {                            
-                                if (waveTimer%(t.atkSpeed*200) == 0) {
+                                if (waveTimer%(t.atkSpeed*100) == 0) {
                                     lanes[t.lane-2][0].life = lanes[t.lane-2][0].life - t.attack;
                                 }
                                 if (lanes[t.lane-2][0].life <= 0) {
@@ -354,7 +354,7 @@
                     } else if (t.type==3) {//pawn
                         console.log(t.lane-1);
                         if (lanes[(t.lane-1)].length >= 1) {     
-                            if (waveTimer%(t.atkSpeed*200) == 0) {
+                            if (waveTimer%(t.atkSpeed*100) == 0) {
                                 lanes[(t.lane-1)][0].life = lanes[(t.lane-1)][0].life - t.attack;
                             }
                             if (lanes[t.lane-1][0].life <= 0) {
@@ -400,27 +400,26 @@
         }
         #lifeCounter{
             position: absolute;
-            top: 25vh;
-            left: 1vw;
-            right: 5vw;
+            top: 250px;
+            left: 10px;
         }
         #moneyCounter{
             position: absolute;
-            top: 25vh;
-            left: 5vw;
-            right: 10vw;
+            top: 250px;
+            left: 100px;
         }
         #buttons{
             position: absolute;
-            top: 30vh;
-            left: 0;
-            right: 100;
+            top: 290px;
+            left: 0vw;
+
         }
         #infoDisplay{
-            width: 20vw;
             height: 250px;
             position: absolute;
-            left: 55vw;
+            top: 0;
+            left: 1020px;
+            right: 0;
             font-size: 20px;
         }
     </style>
@@ -574,7 +573,7 @@
                 }
                 
             }
-        }, 10);
+        }, 1000/60);
         /*for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 10; j++) {                
                 const object3D =  document.createElement("a-entity");

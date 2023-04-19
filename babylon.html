@@ -139,7 +139,7 @@
             c.strokeStyle = "black";
             c.lineWidth = 1.5;
 
-            ypos = 50*lane-5;
+            ypos = 50*lane + 5;
             c.globalAlpha = 1.0;
             c.beginPath();
             c.rect(u.position, ypos,u.life*10,5);
@@ -315,22 +315,13 @@
                         lanes[dead[j][0]].splice(dead[j][1],1);
                     }
                 }
-                for (let i = 0; i < unitObject.length; i++) {
-                    var u = unitObject[i];
-                    if (u[0].life > 0) {
-                        u[1].position.x = -4.9+(u[0].position/100);//unitbox position                        
-                    }
-                    else {
-                        u[1].position.x = -6;
-                    }
-                }
                 //tower attacks
                 for (let i = 0; i < towers.length; i++) {
                     var t = towers[i];
                     if (t.type==1) {//rook
                         var dead=[];
                         for (let j = 0; j < lanes[t.lane].length; j++) {
-                            if (waveTimer%(t.atkSpeed*200) == 0) {
+                            if (waveTimer%(t.atkSpeed*100) == 0) {
                                 lanes[t.lane][j].life = lanes[t.lane][j].life - t.attack;
                             }
                             if(lanes[t.lane][j].life <= 0) {
@@ -344,7 +335,7 @@
                     } else if (t.type==2) {//bishop
                         if (lanes[t.lane+1]) {
                             if (lanes[t.lane+1] .length>= 1) {
-                                if (waveTimer%(t.atkSpeed*200) == 0) {
+                                if (waveTimer%(t.atkSpeed*100) == 0) {
                                     lanes[t.lane+1][0].life = lanes[t.lane+1][0].life - t.attack;
                                 }
                                 if (lanes[t.lane+1][0].life <= 0) {
@@ -355,7 +346,7 @@
                         }
                         if (lanes[t.lane-1]) {
                             if (lanes[t.lane-1].length >= 1) {                            
-                                if (waveTimer%(t.atkSpeed*200) == 0) {
+                                if (waveTimer%(t.atkSpeed*100) == 0) {
                                     lanes[t.lane-1][0].life = lanes[t.lane-1][0].life - t.attack;
                                 }
                                 if (lanes[t.lane-1][0].life <= 0) {
@@ -367,7 +358,7 @@
                                             
                     } else if (t.type==3) {//pawn
                         if (lanes[t.lane].length >= 1) {     
-                            if (waveTimer%(t.atkSpeed*200) == 0) {
+                            if (waveTimer%(t.atkSpeed*100) == 0) {
                                 lanes[t.lane][0].life = lanes[t.lane][0].life - t.attack;
                             }
                             if (lanes[t.lane][0].life <= 0) {
@@ -377,6 +368,16 @@
                         }               
                     }
                     
+                }
+                //3D animations
+                for (let i = 0; i < unitObject.length; i++) {
+                    var u = unitObject[i];
+                    if (u[0].life > 0) {
+                        u[1].position.x = -4.9+(u[0].position/100);//unitbox position                        
+                    }
+                    else {
+                        u[1].position.x = -6;
+                    }
                 }
                 //lose condition
                 if (lives<=0) {
