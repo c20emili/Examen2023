@@ -75,24 +75,6 @@
 
             c.restore();            
         }
-        function pointerCircle() {
-            c.save();
-
-            c.strokeStyle = "black";
-            c.fillStyle = "blue";
-            c.lineWidth = 1.5;
-            
-            c.globalAlpha = 1.0;
-            c.beginPath();
-            c.arc(mx, my, 6, 0, ((Math.PI/180)*360), true); 
-            c.closePath();
-            
-            c.fill();
-            c.stroke();
-
-            c.restore();          
-            
-        }
         function drawUnit(u,lane) {
             c.save();
             switch (u.type) {
@@ -158,7 +140,6 @@
                     drawUnit(laneUnit,i);
                 }                
             }
-            pointerCircle();
             
         }
         function selectTile(){
@@ -244,12 +225,17 @@
             if (!fpsMeter) {
                 fpsMeter = setInterval(() => {
                     testSerie++;
-                    data += testSerie +", "+ frames + ",\n";
+                    data += testSerie + "," + frames + ",\n";
                     frames = 0;
                 }, 1000);
             }
             if (waveindexNumber>waveAmount) {
-                console.log(data);                
+                console.log(data);
+                var anchor = document.createElement('a');  
+                anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
+                anchor.target = '_blank';
+                anchor.download = 'testData.csv';  
+                anchor.click();           
             }
             waveTimer=0;
             paused=false;
@@ -351,7 +337,6 @@
                         }
                                             
                     } else if (t.type==3) {//pawn
-                        console.log(t.lane-1);
                         if (lanes[(t.lane-1)].length >= 1) {     
                             if (waveTimer%(t.atkSpeed*100) == 0) {
                                 lanes[(t.lane-1)][0].life = lanes[(t.lane-1)][0].life - t.attack;

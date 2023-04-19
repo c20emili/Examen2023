@@ -242,7 +242,12 @@
                 }, 1000);
             }
             if (waveindexNumber>waveAmount) {
-                console.log(data);                
+                console.log(data);
+                var anchor = document.createElement('a');  
+                anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
+                anchor.target = '_blank';
+                anchor.download = 'testData.csv';  
+                anchor.click();
             }
             waveTimer=0;
             paused=false;
@@ -498,7 +503,8 @@
         var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
         var createScene = function () {
             var scene = new BABYLON.Scene(engine);// create a basic Babylon Scene object          
-            var camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 0, 0), scene);// create camera
+            var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(0, 0, -3), scene);// create camera
+            console.log(Math.PI / 2);
             camera.attachControl(canvas, true);// attach camera
             var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);// create light
             light.intensity = 0.7;
