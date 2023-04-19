@@ -44,20 +44,8 @@
         var patterns = [pattern1,pattern2,pattern1,pattern2];
         var tileSelected = [];
         var frames = 0;
-        var data = [];
+        var data = "";
         var testSerie = 0;
-        function measureFrames(){
-            testSerie++;
-            var dataPoint = frames;
-            data.push(dataPoint);
-            frames = 0;
-        }
-        setInterval(() => {
-            if (!paused) {
-            measureFrames();
-                
-            }
-        }, 1000);
         // -------------------------------------------
         var gameCanvas,c;
         var tileWidth=100;
@@ -100,24 +88,6 @@
             }
 
             c.restore();            
-        }
-        function pointerCircle() {
-            c.save();
-
-            c.strokeStyle = "black";
-            c.fillStyle = "blue";
-            c.lineWidth = 1.5;
-            
-            c.globalAlpha = 1.0;
-            c.beginPath();
-            c.arc(mx, my, 6, 0, ((Math.PI/180)*360), true); 
-            c.closePath();
-            
-            c.fill();
-            c.stroke();
-
-            c.restore();          
-            
         }
         function drawUnit(u,lane) {
             c.save();
@@ -184,7 +154,6 @@
                     drawUnit(laneUnit,i);
                 }                
             }
-            pointerCircle();
             
         }
         function selectTile(){
@@ -262,14 +231,23 @@
             document.getElementById("moneyCounter").innerHTML = "Cash: " + money;
             gameLoop();
         }, 5);
-
-        function nextWave(){
+        var fpsMeter;
+        function nextWave() {
             waveindexNumber++;
+            if (!fpsMeter) {
+                fpsMeter = setInterval(() => {
+                    testSerie++;
+                    data += testSerie +", "+ frames + ",\n";
+                    frames = 0;
+                }, 1000);
+            }
+            if (waveindexNumber>waveAmount) {
+                console.log(data);                
+            }
             waveTimer=0;
             paused=false;
-            document.getElementById("nextWaveButton").setAttribute("disabled",true);
+            document.getElementById("nextWaveButton").setAttribute("disabled",true);            
         }
-
         function gameLoop(){
             display();
             if (!paused && waveindexNumber <= waveAmount) {
@@ -385,7 +363,6 @@
                 }
                 //lose condition
                 if (lives<=0) {
-                    console.log(data);
                     if (confirm("Play again?")) {
                         restartGame();
                     }
@@ -394,6 +371,9 @@
                 
                 if (wave[wave.length-1].spawnTime  < waveTimer && lanes[0].length == 0 && lanes[1].length == 0 && lanes[2].length == 0 && lanes[3].length == 0 && lanes[4].length == 0) {
                     paused=true;
+                    clearInterval(fpsMeter);
+                    fpsMeter = null;
+                    frames=0;
                     document.getElementById("nextWaveButton").removeAttribute("disabled");
                     for (let index = 0; index < towers.length; index++) {
                         var t = towers[index];                 
@@ -500,7 +480,9 @@
         var startRenderLoop = function (engine, canvas) {
             engine.runRenderLoop(function () {
                 if (!stopped) {
-                    frames++;
+                    if (!paused) {
+                        frames++;
+                    }
                     if (sceneToRender && sceneToRender.activeCamera) {
                         sceneToRender.render();
                     }                    
