@@ -39,13 +39,14 @@
         var towers = [];
         var paused = true;
         var endOfLanes = 1001;
-        var pattern1 = [3,2,4,3,2,4,3,2,4,3,2,4,3,2,4,3,2,4,3,2,4];
+        var pattern1 = [2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,];
+        var pattern2 = [0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4];
+        var patterns = [pattern1,pattern2,pattern1,pattern2];
         var tileSelected = [];
         var frames = 0;
         var data = [];
         var testSerie = 0;
         function measureFrames(){
-            console.log(data);
             testSerie++;
             var dataPoint = frames;
             data.push(dataPoint);
@@ -191,11 +192,15 @@
                 for(cx=0;cx<10;cx++){
                     if(mx >= tileWidth*cx && mx <= tileWidth*(cx+1) && my >= tileOffsY+(tileHeight*(cy)) && my <= tileOffsY+(tileHeight*(cy+1)) ){
                         if (tiles[cx][cy] == 0 && tower != "") {
-                            placeTower(tower,cy+1,cx+1);
+                            placeTower(tower,cy,cx);
                         } else if (tiles[cx][cy] != 0) {
                             tileSelected[0] = cx;
                             tileSelected[1] = cy;
-                            console.log(tileSelected);
+                            for (let i = 0; i < towers.length; i++) {
+                                if (towers[i].lane == (cy+1) && towers[i].position == (cx+1)) {
+                                    updateTowerDisplay(towers[i]);
+                                }                                
+                            }
                         }
                     }
                 }
@@ -213,11 +218,11 @@
             waveindexNumber=0;
             towers = [];
             lanes = [[],[],[],[],[]];
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < waveAmount; i++) {
                 waves[i]=[];
-                count=1;
+                var count = 0;
                 for (let index = 0; index < 10; index++) {
-                    waves[i].push({spawnTime:count*300,lane:pattern1[index],unit:{life:5,position:0,type:1,loot:50}})
+                    waves[i].push({spawnTime:count*150,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50}})
                     count++;            
                 }            
             }
@@ -227,13 +232,10 @@
             document.getElementById("moneyCounter").innerHTML = "Cash: " + money;
             //clearField();
         }
-        function spawnUnit(lane,unit){
-            lanes[lane].push(unit);
-        }
 
         function placeTower(tower,l,pos){
             if (money>=tower.cost) {
-                tiles[pos-1][l-1] = tower.type;
+                tiles[pos][l] = tower.type;
                 var t = {name:tower.name,health:tower.health,lane:l,position:pos,type:tower.type,attack:tower.attack,atkSpeed:tower.atkSpeed,cost:tower.cost,note:tower.note};
                 towers.push(t);
                 money=money - tower.cost;
@@ -242,6 +244,15 @@
 
         function selectTower(t){
             tower=t;
+            updateTowerDisplay(tower);
+        }
+        function updateTowerDisplay(t){
+            document.getElementById("selectedTowerName").innerHTML = t.name;
+            document.getElementById("selectedTowerHealth").innerHTML = t.health;
+            document.getElementById("selectedTowerAttack").innerHTML = t.attack;
+            document.getElementById("selectedTowerAttackSpeed").innerHTML = t.atkSpeed;
+            document.getElementById("selectedTowerCost").innerHTML = t.cost;
+            document.getElementById("selectedTowerInfo").innerHTML = t.note; 
         }
 
         setInterval(() => {
@@ -263,14 +274,15 @@
                 activeWave(waves[waveindexNumber-1]);     
             }
         }
-
+        var unitObject = [];
         function activeWave(wave){
             if (!stopped) {
                 waveTimer++;
                 //enemy spawn
                 for (let i = 0; i < wave.length; i++) {
-                    if (wave[i].spawnTime==waveTimer) {
-                        spawnUnit(wave[i].lane,wave[i].unit);
+                    if (wave[i].spawnTime == waveTimer) {
+                        lanes[wave[i].lane].push(wave[i].unit);
+                        connectUnitObject(lanes[wave[i].lane][lanes[wave[i].lane].length-1],waveindexNumber-1,i);
                     }
                 }
                 //Enemy unit movement
@@ -279,13 +291,11 @@
                     for (let j = 0; j < lanes[i].length; j++) {
                         var attacked=false;
                         for (let k = 0; k < towers.length; k++) {
-                            if (lanes[i][j].position==towers[k].position*100-101 && i == towers[k].lane) {
+                            if (lanes[i][j].position >= (towers[k].position)*100 && i == towers[k].lane) {
                                     attacked=true;
                                 if (waveTimer%200 == 0) {
                                     towers[k].health--;
                                     if (towers[k].health == 0) {
-                                        console.log(towers[k].position-1)
-                                        console.log(towers[k].lane-1)
                                         tiles[towers[k].position-1][towers[k].lane-1] = 0;
                                         towers.splice(k,1);
                                     }
@@ -304,7 +314,15 @@
                     for (let j = 0; j < dead.length; j++) {
                         lanes[dead[j][0]].splice(dead[j][1],1);
                     }
-                    
+                }
+                for (let i = 0; i < unitObject.length; i++) {
+                    var u = unitObject[i];
+                    if (u[0].life > 0) {
+                        u[1].position.x = -4.9+(u[0].position/100);//unitbox position                        
+                    }
+                    else {
+                        u[1].position.x = -6;
+                    }
                 }
                 //tower attacks
                 for (let i = 0; i < towers.length; i++) {
@@ -348,7 +366,6 @@
                         }
                                             
                     } else if (t.type==3) {//pawn
-                        console.log(t.lane);
                         if (lanes[t.lane].length >= 1) {     
                             if (waveTimer%(t.atkSpeed*200) == 0) {
                                 lanes[t.lane][0].life = lanes[t.lane][0].life - t.attack;
@@ -371,7 +388,6 @@
                 //end of wave condition
                 
                 if (wave[wave.length-1].spawnTime  < waveTimer && lanes[0].length == 0 && lanes[1].length == 0 && lanes[2].length == 0 && lanes[3].length == 0 && lanes[4].length == 0) {
-                    console.log(lanes);
                     paused=true;
                     document.getElementById("nextWaveButton").removeAttribute("disabled");
                     for (let index = 0; index < towers.length; index++) {
@@ -395,26 +411,32 @@
         }
         #lifeCounter{
             position: absolute;
-            top: 25vh;
-            left: 1vw;
-            right: 5vw;
+            top: 250px;
+            left: 10px;
         }
         #moneyCounter{
             position: absolute;
-            top: 25vh;
-            left: 5vw;
-            right: 10vw;
+            top: 250px;
+            left: 100px;
         }
         #buttons{
             position: absolute;
-            top: 30vh;
-            left: 5vw;
+            top: 290px;
+            left: 0vw;
 
+        }
+        #infoDisplay{
+            height: 250px;
+            position: absolute;
+            top: 0;
+            left: 1020px;
+            right: 0;
+            font-size: 20px;
         }
     </style>
 </head>
 <!--  -->
-<body onload="restartGame();init2DGraphics();">
+<body>
     <canvas id="renderCanvas" width="1000" height="250" touch-action="none"></canvas>
     <canvas id="gameWindow" width="1000" height="500" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
     <h3 id="lifeCounter">5</h3>
@@ -426,9 +448,36 @@
         <button onclick="selectTower(wall)">Select Wall</button>
         <button id="nextWaveButton" onclick="nextWave()">Next wave</button>
     </div>
+    <div id="infoDisplay">
+        <table>
+            <th id="selectedTowerName">None selected</th>
+            <tr>
+                <td>Health:</td>
+                <td id="selectedTowerHealth">0</td>
+            </tr>
+            <tr>
+                <td>Attack:</td>
+                <td id="selectedTowerAttack">0</td>
+            </tr>
+            <tr>
+                <td>Attack speed:</td>
+                <td id="selectedTowerAttackSpeed">0</td>
+            </tr>
+            <tr>
+                <td>Info:</td>
+                <td id="selectedTowerInfo">none</td>
+            </tr>
+            <tr>
+                <td>Cost:</td>
+                <td id="selectedTowerCost">0</td>
+            </tr>
+        </table>
+    </div>
 
     
     <script>
+        init2DGraphics();
+        restartGame();
         var stopped = false;
         function toggle(p) {
             return !p;
@@ -439,7 +488,7 @@
                 event.preventDefault();
                 stopped = toggle(stopped);
             }
-	    });
+        });
 
         var canvas = document.getElementById("renderCanvas");
 
@@ -457,66 +506,48 @@
         var engine = null;
         var scene = null;
         var sceneToRender = null;
+        var boxUnits = [];
         var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
         var createScene = function () {
-            // This creates a basic Babylon Scene object (non-mesh)
-            var scene = new BABYLON.Scene(engine);
-            
-            var camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2.5, 3, new BABYLON.Vector3(0, 0, 0), scene);
-
-            // This attaches the camera to the canvas
-            camera.attachControl(canvas, true);
-
-            // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
-            var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
-
-            // Default intensity is 1. Let's dim the light a small amount
+            var scene = new BABYLON.Scene(engine);// create a basic Babylon Scene object          
+            var camera = new BABYLON.ArcRotateCamera("camera", -Math.PI / 2, Math.PI / 2, 3, new BABYLON.Vector3(0, 0, 0), scene);// create camera
+            camera.attachControl(canvas, true);// attach camera
+            var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);// create light
             light.intensity = 0.7;
-            const animBox = new BABYLON.Animation("boxAnimation", "position.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE); 
             const animBoxSpinx = new BABYLON.Animation("boxAnimation", "rotation.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);  
             const animBoxSpiny = new BABYLON.Animation("boxAnimation", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);  
-            const animBoxSpinz = new BABYLON.Animation("boxAnimation", "rotation.z", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);        
-            var box = [];
-            for (let i = 0; i < 5; i++) {
-                box[i] = new BABYLON.MeshBuilder.CreateBox("box", {}, scene);
-                box[i].scaling = new BABYLON.Vector3(0.2,0.2,0.2);
-                box[i].position = new BABYLON.Vector3(0,1-i/1.75,0);
-                console.log(box[i]);
-                const boxKeys = []; 
-                boxKeys.push({
-                    frame: 0+i*20,
-                    value: -10
-                });
+            const animBoxSpinz = new BABYLON.Animation("boxAnimation", "rotation.z", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+            
+            for (let i = 0; i < waves.length; i++) {
+                boxUnits.push([]);
+                for (let j = 0; j < waves[i].length; j++) {
+                    boxUnits[i][j] = new BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+                    boxUnits[i][j].scaling = new BABYLON.Vector3(0.2,0.2,0.2);
+                    boxUnits[i][j].position = new BABYLON.Vector3(-6,1-waves[i][j].lane/2,0);//unitbox position
+                    //boxUnits[i][j].position.x = -8 + 1000 * 0.016;
+                    const boxKeysSpin = [];
+                    boxKeysSpin.push({
+                        frame: 0,
+                        value: 0
+                    });
 
-                boxKeys.push({
-                    frame: 250+i*20,
-                    value: 20
-                });
-                const boxKeysSpin = [];
-                boxKeysSpin.push({
-                    frame: 0,
-                    value: 0
-                });
-
-                boxKeysSpin.push({
-                    frame: 250,
-                    value: 36
-                });
-                box[i].animations = [];
-                box[i].animations.push(animBox);
-                box[i].animations.push(animBoxSpinx);
-                box[i].animations.push(animBoxSpiny);
-                box[i].animations.push(animBoxSpinz);
-                animBox.setKeys(boxKeys);
-                animBoxSpinx.setKeys(boxKeysSpin);
-                animBoxSpiny.setKeys(boxKeysSpin);
-                animBoxSpinz.setKeys(boxKeysSpin);
-
-                scene.beginAnimation(box[i], 0, 250, true);
+                    boxKeysSpin.push({
+                        frame: 250,
+                        value: 36
+                    });
+                    boxUnits[i][j].animations = [];
+                    boxUnits[i][j].animations.push(animBoxSpinx);
+                    boxUnits[i][j].animations.push(animBoxSpiny);
+                    boxUnits[i][j].animations.push(animBoxSpinz);
+                    animBoxSpinx.setKeys(boxKeysSpin);
+                    animBoxSpiny.setKeys(boxKeysSpin);
+                    animBoxSpinz.setKeys(boxKeysSpin);
+                    scene.beginAnimation(boxUnits[i][j], 0, 250, true);
+                }                
             }
-
             return scene;
         };
+        
         window.initFunction = async function() {
             var asyncEngineCreation = async function() {
                 try {
@@ -540,6 +571,9 @@
         window.addEventListener("resize", function () {
             engine.resize();
         });
+        function connectUnitObject(unit,wave,nr) {
+            unitObject.push([unit, boxUnits[wave][nr]]);
+        }
     </script>
 </body>
 </html>
