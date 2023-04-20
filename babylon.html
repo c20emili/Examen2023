@@ -231,6 +231,7 @@
             document.getElementById("moneyCounter").innerHTML = "Cash: " + money;
             gameLoop();
         }, 5);
+
         var fpsMeter;
         function nextWave() {
             waveindexNumber++;
@@ -246,19 +247,21 @@
                 var anchor = document.createElement('a');  
                 anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
                 anchor.target = '_blank';
-                anchor.download = 'testData.csv';  
+                anchor.download = 'BTestData.csv';  
                 anchor.click();
             }
             waveTimer=0;
             paused=false;
             document.getElementById("nextWaveButton").setAttribute("disabled",true);            
         }
+
         function gameLoop(){
             display();
             if (!paused && waveindexNumber <= waveAmount) {
                 activeWave(waves[waveindexNumber-1]);     
             }
         }
+
         var unitObject = [];
         function activeWave(wave){
             if (!stopped) {
@@ -482,7 +485,74 @@
 
         var canvas = document.getElementById("renderCanvas");
 
-        var startRenderLoop = function (engine, canvas) {
+        var engine = new BABYLON.Engine(canvas);
+        var scene = new BABYLON.Scene(engine);// create a basic Babylon Scene object
+        var sceneToRender = null;
+        var boxUnits = [];
+        var towerCylinders=[];
+        var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(0, 0, -3), scene);// create camera
+        camera.attachControl(canvas, true);// attach camera
+        var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);// create light
+        light.intensity = 0.7;
+        const animBoxSpinx = new BABYLON.Animation("boxAnimation", "rotation.x", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);  
+        const animBoxSpiny = new BABYLON.Animation("boxAnimation", "rotation.y", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);  
+        const animBoxSpinz = new BABYLON.Animation("boxAnimation", "rotation.z", 30, BABYLON.Animation.ANIMATIONTYPE_FLOAT, BABYLON.Animation.ANIMATIONLOOPMODE_CYCLE);
+        
+        for (let i = 0; i < waves.length; i++) {
+            boxUnits.push([]);
+            for (let j = 0; j < waves[i].length; j++) {
+                boxUnits[i][j] = new BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+                boxUnits[i][j].scaling = new BABYLON.Vector3(0.2,0.2,0.2);
+                boxUnits[i][j].position = new BABYLON.Vector3(-6,1-waves[i][j].lane/2,0);//unitbox position
+                const boxKeysSpin = [];
+                boxKeysSpin.push({
+                    frame: 0,
+                    value: 0
+                });
+
+                boxKeysSpin.push({
+                    frame: 250,
+                    value: 36
+                });
+                boxUnits[i][j].animations = [];
+                boxUnits[i][j].animations.push(animBoxSpinx);
+                boxUnits[i][j].animations.push(animBoxSpiny);
+                boxUnits[i][j].animations.push(animBoxSpinz);
+                animBoxSpinx.setKeys(boxKeysSpin);
+                animBoxSpiny.setKeys(boxKeysSpin);
+                animBoxSpinz.setKeys(boxKeysSpin);
+                scene.beginAnimation(boxUnits[i][j], 0, 250, true);
+            }
+        }
+        for (let i = 0; i < 5; i++) {
+            towerCylinders.push([]);
+            for (let j = 0; j < 10; j++) {
+                towerCylinders[i].push([]);
+                towerCylinders[i][j][0] = new BABYLON.MeshBuilder.CreateCylinder("cylinder", {}, scene);
+                towerCylinders[i][j][0].scaling = new BABYLON.Vector3(0.2,0.2,0.2);     
+                towerCylinders[i][j][0].rotation = new BABYLON.Vector3(-0.8,0,0);
+                towerCylinders[i][j][0].position = new BABYLON.Vector3(-6,1.2-i/2,-0.2);
+                towerCylinders[i][j][1] = new BABYLON.MeshBuilder.CreateCylinder("cylinder", {}, scene);
+                towerCylinders[i][j][1].scaling = new BABYLON.Vector3(0.4,0.05,0.4);     
+                towerCylinders[i][j][1].rotation = new BABYLON.Vector3(-0.8,0,0);
+                towerCylinders[i][j][1].position = new BABYLON.Vector3(-6,1-i/2,0);
+
+            }
+        }
+        
+        engine.runRenderLoop(() => { 
+            if (!stopped) {
+                if (!paused) {
+                    frames++;
+                }
+                scene.render();
+            }
+        }); 
+        function connectUnitObject(unit,wave,nr) {
+            unitObject.push([unit, boxUnits[wave][nr]]);
+        }
+
+        /*var startRenderLoop = function (engine, canvas) {
             engine.runRenderLoop(function () {
                 if (!stopped) {
                     if (!paused) {
@@ -494,17 +564,10 @@
                 }
             });
         }
-
-        var engine = null;
-        var scene = null;
-        var sceneToRender = null;
-        var boxUnits = [];
-        var towerCylinders=[];
-        var createDefaultEngine = function() { return new BABYLON.Engine(canvas, true, { preserveDrawingBuffer: true, stencil: true,  disableWebGL2Support: false}); };
+        var createDefaultEngine = function() { return new BABYLON.Engine(canvas); };
         var createScene = function () {
             var scene = new BABYLON.Scene(engine);// create a basic Babylon Scene object          
             var camera = new BABYLON.UniversalCamera("camera", new BABYLON.Vector3(0, 0, -3), scene);// create camera
-            console.log(Math.PI / 2);
             camera.attachControl(canvas, true);// attach camera
             var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);// create light
             light.intensity = 0.7;
@@ -536,7 +599,7 @@
                     animBoxSpiny.setKeys(boxKeysSpin);
                     animBoxSpinz.setKeys(boxKeysSpin);
                     scene.beginAnimation(boxUnits[i][j], 0, 250, true);
-                }                
+                }
             }
             for (let i = 0; i < 5; i++) {
                 towerCylinders.push([]);
@@ -551,7 +614,7 @@
                     towerCylinders[i][j][1].rotation = new BABYLON.Vector3(-0.8,0,0);
                     towerCylinders[i][j][1].position = new BABYLON.Vector3(-6,1-i/2,0);
 
-                }                
+                }
             }
             return scene;
         };
@@ -578,10 +641,7 @@
         // Resize
         window.addEventListener("resize", function () {
             engine.resize();
-        });
-        function connectUnitObject(unit,wave,nr) {
-            unitObject.push([unit, boxUnits[wave][nr]]);
-        }
+        });*/
     </script>
 </body>
 </html>

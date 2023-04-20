@@ -175,7 +175,7 @@
             lanes = [[],[],[],[],[]];
             for (let i = 0; i < 3; i++) {
                 waves[i]=[];
-                count=1;
+                count=0;
                 for (let index = 0; index < 10; index++) {
                     waves[i].push({spawnTime:count*150,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50}})
                     count++;            
@@ -224,6 +224,8 @@
             waveindexNumber++;
             if (!fpsMeter) {
                 fpsMeter = setInterval(() => {
+                    var timeStamp = new Date;
+                    console.log(timeStamp.valueOf());
                     testSerie++;
                     data += testSerie + "," + frames + ",\n";
                     frames = 0;
@@ -234,7 +236,7 @@
                 var anchor = document.createElement('a');  
                 anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
                 anchor.target = '_blank';
-                anchor.download = 'testData.csv';  
+                anchor.download = 'ATestData.csv';  
                 anchor.click();           
             }
             waveTimer=0;
