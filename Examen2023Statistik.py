@@ -55,16 +55,16 @@ def exampleBarChars():
 
 
     # Plot bars
-    plt.bar(barsOrder, barsData, color=colors, edgecolor='black', width=barWidth, yerr=barsInterval3, ecolor="black", capsize=5, alpha=Opacity, bottom=0)
+    plt.bar(barsOrder, barsData, color=colors, edgecolor='black', width=barWidth, yerr=barsInterval, ecolor="black", capsize=5, alpha=Opacity, bottom=0)
 
     # Put a tick on the x-axis undex each bar and label it with column name
     plt.xticks(range(2), ['Babylon', 'A-Frame'])
 
     plt.ylabel('Frames')
-    plt.ylim(55, 65)
-    plt.title('Frames per second with \n Confidence interval')
-    #plt.show()
-    plt.savefig('FramesCI.png')
+    plt.ylim(35, 65)
+    plt.title('Frames per second with \n Standard Deviation')
+    # plt.show()
+    plt.savefig('FramesStd.png')
 
 
 exampleBarChars()

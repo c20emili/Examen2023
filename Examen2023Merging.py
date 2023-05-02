@@ -6,6 +6,6 @@ df2 = pd.read_csv('TestDataA-Frame2.csv', keep_default_na=False, sep=",", header
 
 # using merge function by setting how='inner'
 output1 = pd.merge(df1, df2, on=['nr'], how='inner')
-# output1.to_csv('mergedFrames.csv')
+output1.to_csv('mergedFrames.csv')
 # displaying result
 print(output1)
