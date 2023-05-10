@@ -12,7 +12,7 @@
         var waveAmount = 3;
         var unit1={life:5,position:0,type:1,loot:50},unit2={life:10,position:0,type:2,loot:150},unit3={life:25,position:0,type:3,loot:500};
         var waves = [];
-        var waveindexNumber = 0;
+        var waveindexnumber = 0;
         var waveTimer;
         var lives = 5;
         var money = 200;//used to buy towers
@@ -25,7 +25,7 @@
         var wall = {name:"Wall",health:15,lane:0,position:0,type:4,attack:0,atkSpeed:0,cost:100,note:"Do not attack but have high health"};
         var towers = [];
         var paused = true;
-        var endOfLanes = 1001;
+        var endOflanes = 1001;
         var pattern1 = [2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,2,1,3,];
         var pattern2 = [0,1,2,3,4,0,1,2,3,4,0,1,2,3,4,0,1,2,3,4];
         var patterns = [pattern1,pattern2,pattern1,pattern2];
@@ -33,6 +33,13 @@
         var frames = 0;
         var data = "";
         var testSerie = 0;
+        var attacked = false;
+        var lanes3D = [25.5, 22.9, 20.3, 17.7, 15.1];
+        var towerPositions3D = [0,-5.5,-10.5,-15.5,-21,-26,-32,-37,-43,-48];
+        var sceneEl;
+        var stopped = false;
+        var fpsMeter;
+        var counter=0;
         // -------------------------------------------
         var gameCanvas,c;
         var tileWidth=100;
@@ -45,6 +52,9 @@
         var hx=0,hy=0,mx=0,my=0;          
         // Tilemap
         var tiles=[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]];
+        
+       
+        
         function init2DGraphics()
         {  
             gameCanvas = document.getElementById("gameWindow");
@@ -167,28 +177,156 @@
             mx = e.clientX - rect.left; //x position within the element.
             my = e.clientY - rect.top;  //y position within the element.
         }
+        
+        //-----------------------------------------A-Frame specifik kod
+        
+        // Components
+        AFRAME.registerComponent('lane', {
+            schema: {type: 'int', default: 0}
+        });
+        AFRAME.registerComponent('num', {
+            schema: {type: 'int', default: 0}
+        });
+        AFRAME.registerComponent('lanenum', {
+            schema: {type: 'int', default: 0}
+        });
+        AFRAME.registerComponent('move', {
+            schema:{default:false},
+            tick: function (time, timeDelta) {   
+                if (this.data) {
+                    if (!attacked) {
+                        if (lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')]) {
+                            this.el.setAttribute('position',{
+                                x: (-48.5 + 0.052 * lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')].position),
+                                y: lanes3D[this.el.getAttribute('lane')],
+                                z:-30
+                            })  
+                        }                        
+                    }
+                    if (this.el.getAttribute('position').x >= (-48.5 + 0.052 * 1000)) {
+                        this.el.parentNode.removeChild(this.el);
+                    }
+                }
+            }
+        });
+        AFRAME.registerComponent('grow', {
+            schema:{default:false},
+            tick: function (time, timeDelta) {
+                if (this.data) {
+                    if (!attacked) {
+                        if (lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')]) {
+                            this.el.setAttribute('geometry',{
+                                height: (0.5+0.001*lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')].position%200),
+                                width: (0.5+0.001*lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')].position%200),
+                                depth: (0.5+0.001*lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')].position%200)
+                            });
+                        }
+                    }
+                }
+            }
+        });
+        AFRAME.registerComponent('rotate', {
+            schema:{default:false},
+            tick: function (time, timeDelta) {      
+                if (this.data) {
+                    if (!attacked) {
+                        if (lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')]) {
+                            this.el.setAttribute('rotation',{
+                                x: lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')].position%360, 
+                                y: lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')].position%360,
+                                z: lanes[this.el.getAttribute('lane')][this.el.getAttribute('lanenum')].position%360,
+                            });
+                        }
+                    }
+                }
+            }
+        });
+        AFRAME.registerComponent('hpmulti', {
+            schema: {default: 1/3}
+        });
+        AFRAME.registerComponent('entitytype', {
+            schema: {type: 'string', default: 'Unit'},
+        });
+        AFRAME.registerComponent('towertype', {
+            schema: {type: 'int', default: 1},
+            tick: function (time, timeDelta) {
+                switch (this.data) {
+                    case 1:
+                        this.el.setAttribute('material',{color: 'blue'});
+                        break;
+                    case 2:
+                        this.el.setAttribute('material',{color: 'green'});
+                        break;
+                    case 3:
+                        this.el.setAttribute('material',{color: 'red'});                        
+                        break;
+                    case 4:
+                        this.el.setAttribute('material',{color: 'purple'});
+                        break;                
+                    default:
+                        this.el.setAttribute('material',{color: 'white'});
+                        break;
+                }
+            }
+        });
+        AFRAME.registerComponent('hp', {
+            schema: {type: 'int', default: 5},
+            tick: function (time, timeDelta) {
+                if (this.el.getAttribute('entitytype') == 'tower') {
+                    this.el.setAttribute('geometry',{height: this.data * this.el.getAttribute('hpmulti')})
+                }
+                if (this.data <= 0) {
+                    this.el.parentNode.removeChild(this.el);
+                }
+            }
+        });
+        AFRAME.registerComponent('framecounter', {
+            tick: function (time, timeDelta) {
+                if (!stopped) {
+                    if (!paused) {
+                        frames++;
+                    }
+                }
+            }
+        });
+        //------------------------------------------------------
         function restartGame(){
+            sceneEl = document.querySelector('a-scene');
             paused = true;
             waves = [];
-            waveindexNumber=0;
+            waveindexnumber=0;
             towers = [];
             lanes = [[],[],[],[],[]];
+            var c = 0;
             for (let i = 0; i < 3; i++) {
                 waves[i]=[];
                 count=0;
                 for (let index = 0; index < 10; index++) {
-                    waves[i].push({spawnTime:count*150,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50}})
-                    count++;            
-                }            
+                    c++;
+                    waves[i].push({spawnTime:count*50,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50,num:c}})
+                    count++;
+                }       
             }
             lives = 5;
             money = 200;
             document.getElementById("lifeCounter").innerHTML = "lives: " + lives;
             document.getElementById("moneyCounter").innerHTML = "Cash: " + money;
-            //clearField();
         }
         function spawnUnit(lane,unit){
             lanes[lane].push(unit);
+            counter++;
+            var enemytempVar = document.createElement("a-entity");
+            enemytempVar.setAttribute("id","lane"+lane+"unit"+counter);
+            enemytempVar.setAttribute("lane",lane);
+            enemytempVar.setAttribute("lanenum",lanes[lane].length-1);
+            enemytempVar.setAttribute("num",counter);
+            enemytempVar.setAttribute("hp",unit.life);
+            enemytempVar.setAttribute("geometry",{primitive: "box"});
+            enemytempVar.setAttribute("material",{color: "#4CD3D9"});
+            enemytempVar.setAttribute("move",true);
+            enemytempVar.setAttribute("grow",true);
+            enemytempVar.setAttribute("rotate",true);
+            sceneEl.appendChild(enemytempVar);   
         }
 
         function placeTower(tower,l,pos){
@@ -197,6 +335,33 @@
                 var t = {name:tower.name,health:tower.health,lane:l,position:pos,type:tower.type,attack:tower.attack,atkSpeed:tower.atkSpeed,cost:tower.cost,note:tower.note};
                 towers.push(t);
                 money=money - tower.cost;
+                var tempVar =  document.createElement("a-entity");
+                tempVar.setAttribute("id","lane"+t.lane+"tower"+t.position);
+                tempVar.setAttribute("geometry","primitive:cylinder; height:0.2;");
+                tempVar.setAttribute("position",{
+                    x:towerPositions3D[10-t.position],
+                    y:lanes3D[t.lane-1],
+                    z: -30
+                });
+                tempVar.setAttribute("rotation","90 0 0");
+                tempVar.setAttribute('hp',t.health);
+                tempVar.setAttribute('towertype',t.type);
+                tempVar.setAttribute('entitytype','base');
+                sceneEl.appendChild(tempVar);
+                var smalltempVar =  document.createElement("a-entity");
+                smalltempVar.setAttribute("id","lane"+t.lane+"towerTop"+t.position);
+                smalltempVar.setAttribute("geometry","primitive:cylinder; radius:0.5; height:1;");
+                smalltempVar.setAttribute("position",{
+                    x:towerPositions3D[10-t.position],
+                    y:lanes3D[t.lane-1],
+                    z: -29.5
+                });
+                smalltempVar.setAttribute("rotation","90 0 0");
+                smalltempVar.setAttribute('hp',t.health);
+                smalltempVar.setAttribute('towertype',t.type);
+                smalltempVar.setAttribute('entitytype','tower');
+                smalltempVar.setAttribute('hpmulti',1/t.health);
+                sceneEl.appendChild(smalltempVar);
             }
         }
 
@@ -219,19 +384,17 @@
             gameLoop();
         }, 5);
 
-        var fpsMeter;
         function nextWave(){
-            waveindexNumber++;
+            waveindexnumber++;
             if (!fpsMeter) {
                 fpsMeter = setInterval(() => {
                     var timeStamp = new Date;
-                    console.log(timeStamp.valueOf());
                     testSerie++;
                     data += testSerie + "," + frames + ",\n";
                     frames = 0;
                 }, 1000);
             }
-            if (waveindexNumber>waveAmount) {
+            if (waveindexnumber>waveAmount) {
                 console.log(data);
                 var anchor = document.createElement('a');  
                 anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
@@ -246,34 +409,37 @@
 
         function gameLoop(){
             display();
-            if (!paused && waveindexNumber <= waveAmount) {
-                activeWave(waves[waveindexNumber-1]);     
+            if (!paused && waveindexnumber <= waveAmount) {
+                activeWave(waves[waveindexnumber-1]);     
             }
         }
 
         function activeWave(wave){
             if (!stopped) {
-                waveTimer++;
                 //enemy spawn
                 for (let i = 0; i < wave.length; i++) {
-                    if (wave[i].spawnTime==waveTimer) {
+                    if (wave[i].spawnTime == waveTimer) {
                         spawnUnit(wave[i].lane,wave[i].unit);
                     }
                 }
+                waveTimer++;
                 //Enemy unit movement
                 for (let i = 0; i < lanes.length; i++) {                
                     var dead=[];
+                    var deathCounter = 0;
                     for (let j = 0; j < lanes[i].length; j++) {
-                        var attacked=false;
+                        attacked=false;
                         for (let k = 0; k < towers.length; k++) {
                             if (lanes[i][j].position >= (towers[k].position-1)*100 && i == towers[k].lane-1) {
-                                    attacked=true;
+                                attacked=true;
                                 if (waveTimer%200 == 0) {
                                     towers[k].health--;
-                                    if (towers[k].health == 0) {
+                                    document.getElementById("lane"+towers[k].lane+"towerTop"+towers[k].position).setAttribute('hp',towers[k].health);
+                                    document.getElementById("lane"+towers[k].lane+"tower"+towers[k].position).setAttribute('hp',towers[k].health);
+                                    if (towers[k].health <= 0) {
                                         tiles[towers[k].position-1][towers[k].lane-1] = 0;
-                                        document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"towerTop"+towers[k].position));
-                                        document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"tower"+towers[k].position));
+                                        //document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"towerTop"+towers[k].position));
+                                        //document.getElementById("scene").removeChild(document.getElementById("lane"+towers[k].lane+"tower"+towers[k].position));
                                         towers.splice(k,1);
                                     }
                                 }
@@ -281,72 +447,121 @@
                         }
                         if (!attacked){
                             lanes[i][j].position++;
-                            if (lanes[i][j].position==endOfLanes) {
+                            if (lanes[i][j].position > endOflanes) {
                                 lives--;
                                 document.getElementById("lifeCounter").innerHTML = lives;
                                 dead.push([i,j]);
+                                deathCounter++;
                             }
                         }
                     }
+                    if (deathCounter > 0) {
+                        for (let j = 1; j < lanes[i].length; j++) {
+                            if (document.getElementById("lane" + i + "unit" + lanes[i][j].num) != null) {
+                                document.getElementById("lane" + i + "unit" + lanes[i][j].num).setAttribute("lanenum",(j - deathCounter));
+                            }
+                        }  
+                    }
                     for (let j = 0; j < dead.length; j++) {
-                        document.getElementById("scene").removeChild(document.getElementById("lane"+dead[j][0]+"unit"+dead[j][1])); //remove 3d object
+                        //document.getElementById("scene").removeChild(document.getElementById("lane"+dead[j][0]+"unit"+dead[j][1])); //remove 3d object
                         lanes[dead[j][0]].splice(dead[j][1],1);
                     }
                     
                 }
                 //tower attacks
                 for (let i = 0; i < towers.length; i++) {
+                    var l;
                     var t = towers[i];
                     if (t.type==1) {//rook
                         var dead=[];
-                        for (let j = 0; j < lanes[t.lane].length; j++) {
+                        l = t.lane-1;
+                        for (let j = 0; j < lanes[l].length; j++) {
+                            document.getElementById("lane" + l + "unit" + lanes[l][j].num).setAttribute("lanenum",j);
                             if (waveTimer%(t.atkSpeed*100) == 0) {
-                                lanes[t.lane-1][j].life = lanes[t.lane-1][j].life - t.attack;
+                                lanes[l][j].life = lanes[l][j].life - t.attack;
+                                document.getElementById("lane" + l + "unit" + lanes[l][j].num).setAttribute("hp",lanes[l][j].life);
                             }
-                            if(lanes[t.lane-1][j].life <= 0) {
+                            if(lanes[l][j].life <= 0) {
                                 dead.push(j);
+                                for (let k = j; k < lanes[l].length; k++) {
+                                    if (document.getElementById("lane" + l + "unit" + lanes[l][k].num) != null) {
+                                        document.getElementById("lane" + l + "unit" + lanes[l][k].num).setAttribute("lanenum",(k - 1));
+                                    }
+                                }
                             }
                         }
                         for (let j = 0; j < dead.length; j++) {
-                            money = money+lanes[t.lane-1][dead[j]].loot;
-                            document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane-1)+"unit"+dead[j])); //remove 3d object 
-                            lanes[t.lane].splice(dead[j],1);                    
+                            money = money+lanes[l][dead[j]].loot;
+                            //document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane-1)+"unit"+dead[j])); //remove 3d object 
+                            lanes[l].splice(dead[j],1);                    
                         }
                     } else if (t.type==2) {//bishop
-                        if (lanes[t.lane]) {
-                            if (lanes[t.lane] .length>= 1) {
-                                if (waveTimer%(t.atkSpeed*100) == 0) {
-                                    lanes[t.lane][0].life = lanes[t.lane+1][0].life - t.attack;
+                        l = t.lane;
+                        if (lanes[l]) {
+                            if (lanes[l].length >= 1) {
+                                for (let j = 0; j < lanes[l].length; j++) {
+                                    document.getElementById("lane" + l + "unit" + lanes[l][j].num).setAttribute("lanenum",j);
                                 }
-                                if (lanes[t.lane][0].life <= 0) {
-                                    money = money+lanes[t.lane][0].loot;
-                                    document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane)+"unit"+0)); //remove 3d object 
-                                    lanes[t.lane+1].shift();
+                                if (waveTimer%(t.atkSpeed*100) == 0) {
+                                    lanes[l][0].life = lanes[l][0].life - t.attack;
+                                    document.getElementById("lane" + l + "unit" + lanes[l][0].num).setAttribute("hp", lanes[l][0].life);
+                                }
+                                if (lanes[l][0].life <= 0) {
+                                    money = money+lanes[l][0].loot;
+                                    for (let k = 1; k < lanes[l].length; k++) {
+                                        if (document.getElementById("lane" + l + "unit" + lanes[l][k].num) != null) {
+                                            document.getElementById("lane" + l + "unit" + lanes[l][k].num).setAttribute("lanenum",(k - 1));
+                                        }
+                                    }
+                                    //document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane)+"unit"+0)); //remove 3d object 
+                                    lanes[l].shift();
                                 }
                             }
                         }
-                        if (lanes[t.lane-2]) {
-                            if (lanes[t.lane-2].length >= 1) {                            
+                        l = t.lane-2;
+                        if (lanes[l]) {
+                            if (lanes[l].length >= 1) {   
+                                for (let j = 0; j < lanes[l].length; j++) {
+                                    document.getElementById("lane" + l + "unit" + lanes[l][j].num).setAttribute("lanenum",j);
+                                }                         
                                 if (waveTimer%(t.atkSpeed*100) == 0) {
-                                    lanes[t.lane-2][0].life = lanes[t.lane-2][0].life - t.attack;
+                                    lanes[t.lane-2][0].life = lanes[l][0].life - t.attack;
+                                    document.getElementById("lane" + l + "unit" + lanes[l][0].num).setAttribute("hp", lanes[l][0].life);
                                 }
-                                if (lanes[t.lane-2][0].life <= 0) {
-                                    money = money+lanes[t.lane-2][0].loot;
-                                    document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane-2)+"unit"+0)); //remove 3d object 
-                                    lanes[t.lane-1].shift();
+                                if (lanes[l][0].life <= 0) {
+                                    money = money+lanes[l][0].loot;
+                                    for (let k = 1; k < lanes[l].length; k++) {
+                                        if (document.getElementById("lane" + l + "unit" + lanes[l][k].num) != null) {
+                                            document.getElementById("lane" + l + "unit" + lanes[l][k].num).setAttribute("lanenum",(k - 1));
+                                        }
+                                    }
+                                    //document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane-2)+"unit"+0)); //remove 3d object 
+                                    lanes[l].shift();
                                 }
                             }   
                         }
                                             
                     } else if (t.type==3) {//pawn
-                        if (lanes[(t.lane-1)].length >= 1) {     
-                            if (waveTimer%(t.atkSpeed*100) == 0) {
-                                lanes[(t.lane-1)][0].life = lanes[(t.lane-1)][0].life - t.attack;
+                        l = t.lane-1;
+                        if (lanes[l].length >= 1) {
+                            for (let j = 0; j < lanes[l].length; j++) {
+                                document.getElementById("lane" + l + "unit" + lanes[l][j].num).setAttribute("lanenum",j);
                             }
-                            if (lanes[t.lane-1][0].life <= 0) {
-                                money = money+lanes[t.lane-1][0].loot;
-                                document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane-1)+"unit"+0)); //remove 3d object                            
-                                lanes[t.lane-1].shift();
+                            if (waveTimer%(t.atkSpeed*100) == 0) {
+                                lanes[l][0].life = lanes[l][0].life - t.attack;
+                                document.getElementById("lane" + l + "unit" + lanes[l][0].num).setAttribute("hp", lanes[l][0].life);
+                            }
+                            if (lanes[l][0].life <= 0) {
+                                money = money+lanes[l][0].loot;
+                                for (let k = 1; k < lanes[l].length; k++) {
+                                    console.log(k-1)
+                                    if (document.getElementById("lane" + l + "unit" + lanes[l][k].num) != null) {
+                                    console.log(k-1)
+                                        document.getElementById("lane" + l + "unit" + lanes[l][k].num).setAttribute("lanenum",(k - 1));
+                                    }
+                                }
+                                //document.getElementById("scene").removeChild(document.getElementById("lane"+(t.lane-1)+"unit"+0)); //remove 3d object                            
+                                lanes[l].shift();
                             }
                         }               
                     }                
@@ -363,7 +578,7 @@
                     paused=true;
                     clearInterval(fpsMeter);
                     fpsMeter = null;
-                    frames=0;
+                    frames = 0;
                     document.getElementById("nextWaveButton").removeAttribute("disabled");
                     for (let index = 0; index < towers.length; index++) {
                         var t = towers[index];                 
@@ -371,6 +586,16 @@
                 }
             }
         }
+        function toggle(p) {
+            return !p;
+        }
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'p') {
+                event.preventDefault();
+                stopped = toggle(stopped);
+            }
+	    });
     </script>
     <style>        
         #gameWindow{
@@ -411,15 +636,17 @@
             font-size: 20px;
         }
     </style>
+    <script>
+        /*
+        var entityEl = document.createElement('a-entity');
+        entityEl.setAttribute('do-something-once-loaded', '');
+        sceneEl.appendChild(entityEl);*/
+
+    </script>
 </head>
 <body onload="restartGame();init2DGraphics();">
     <div>
-        <a-scene id="scene">
-            <!--<a-entity id="box3" geometry="primitive:box; width:1.5; height:1.5; depth:1.5;" position="0 20.3 -30" rotation="0 0 0" material = "color: #EF2D5E"></a-entity>
-            <a-entity id="box4" geometry="primitive:box; width:1.5; height:1.5; depth:1.5;" position="0 17.7 -30" rotation="0 0 0" material = "color: #EF2D5E"></a-entity>
-            <a-entity id="box5" geometry="primitive:box; width:1.5; height:1.5; depth:1.5;" position="0 15.1 -30" rotation="0 0 0" material = "color: #EF2D5E"></a-entity>
-            <a-sphere position="-46.5 12.5 -30" radius="0.5" color="#D9C3D9"></a-sphere>-->
-        </a-scene>
+        <a-scene id="scene" framecounter></a-scene>
         <div id="protection"></div>
         <canvas id="gameWindow" width="1000" height="250" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
     </div>
@@ -458,73 +685,65 @@
         </table>
     </div>
     <script>
-        var stopped = false;
-        function toggle(p) {
-            return !p;
-        }
-        
-        document.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'p') {
-                event.preventDefault();
-                stopped = toggle(stopped);
-            }
-	    });
+        /*
         var lanes3D = [25.5, 22.9, 20.3, 17.7, 15.1];
         var towerPositions3D = [0,-5.5,-10.5,-15.5,-21,-26,-32,-37,-43,-48];
-        const scene = document.getElementById("scene");
-        setInterval(() => {
+        const scene = document.getElementById("scene");*/
+        /*setInterval(() => {
             if (!stopped) {
                 if (!paused) {
                     frames++;
                 }
+                */
+                /*
                 for (let i = 0; i < towers.length; i++) {
                     var t = towers[i];
                     if (!document.getElementById("lane"+t.lane+"tower"+t.position)) {
-                        const object3D =  document.createElement("a-entity");
-                        object3D.setAttribute("id","lane"+t.lane+"tower"+t.position);
-                        object3D.setAttribute("geometry","primitive:cylinder; height:0.2;");
-                        object3D.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -30");
-                        object3D.setAttribute("rotation","90 0 0");
+                        const tempVar =  document.createElement("a-entity");
+                        tempVar.setAttribute("id","lane"+t.lane+"tower"+t.position);
+                        tempVar.setAttribute("geometry","primitive:cylinder; height:0.2;");
+                        tempVar.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -30");
+                        tempVar.setAttribute("rotation","90 0 0");
                         switch (t.type) {
                             case 1:
-                                object3D.setAttribute("material","color: lightblue");                    
+                                tempVar.setAttribute("material","color: lightblue");                    
                                 break;
                             case 2:
-                                object3D.setAttribute("material","color: lightgreen");                     
+                                tempVar.setAttribute("material","color: lightgreen");                     
                                 break;
                             case 3:
-                                object3D.setAttribute("material","color: pink");                     
+                                tempVar.setAttribute("material","color: pink");                     
                                 break;
                             case 4:
-                                object3D.setAttribute("material","color: cerise");                     
+                                tempVar.setAttribute("material","color: cerise");                     
                                 break;
                             default:
                                 break;
                         }
-                        scene.appendChild(object3D);
-                        const smallObject3D =  document.createElement("a-entity");
-                        smallObject3D.setAttribute("id","lane"+t.lane+"towerTop"+t.position);
-                        smallObject3D.setAttribute("geometry","primitive:cylinder; radius:0.5; height:1;");
-                        smallObject3D.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -29.5");
-                        smallObject3D.setAttribute("rotation","90 0 0");
+                        scene.appendChild(tempVar);
+                        const smalltempVar =  document.createElement("a-entity");
+                        smalltempVar.setAttribute("id","lane"+t.lane+"towerTop"+t.position);
+                        smalltempVar.setAttribute("geometry","primitive:cylinder; radius:0.5; height:1;");
+                        smalltempVar.setAttribute("position",towerPositions3D[10-t.position]+" "+lanes3D[t.lane-1]+" -29.5");
+                        smalltempVar.setAttribute("rotation","90 0 0");
                         switch (t.type) {
                             case 1:
-                                smallObject3D.setAttribute("material","color: blue");                    
+                                smalltempVar.setAttribute("material","color: blue");                    
                                 break;
                             case 2:
-                                smallObject3D.setAttribute("material","color: green");                     
+                                smalltempVar.setAttribute("material","color: green");                     
                                 break;
                             case 3:
-                                smallObject3D.setAttribute("material","color: red");                     
+                                smalltempVar.setAttribute("material","color: red");                     
                                 break;
                             case 4:
-                                smallObject3D.setAttribute("material","color: purple");
-                                smallObject3D.setAttribute("geometry","primitive:cylinder; radius:0.5; height:"+t.health*0.5+";");
+                                smalltempVar.setAttribute("material","color: purple");
+                                smalltempVar.setAttribute("geometry","primitive:cylinder; radius:0.5; height:"+t.health*0.5+";");
                                 break;
                             default:
                                 break;
                         }
-                        scene.appendChild(smallObject3D);                      
+                        scene.appendChild(smalltempVar);                      
                     }
                     else{
                         var healthMultiplier;
@@ -538,40 +757,43 @@
                         }
                         
                         document.getElementById("lane"+t.lane+"towerTop"+t.position).setAttribute("geometry","primitive:cylinder; radius:0.5; height:"+t.health*healthMultiplier+";");
-                    }                
+                    }   
                 }
+                */
+                /*
                 for (let i = 0; i < lanes.length; i++) {
                     for (let j = 0; j < lanes[i].length; j++) {
                         if (document.getElementById("lane"+i+"unit"+j)) {
-                            var enemyObject3D = document.getElementById("lane"+i+"unit"+j);
+                            var enemytempVar = document.getElementById("lane"+i+"unit"+j);
                             var pos = (-48.5+0.052*lanes[i][j].position);
-                            enemyObject3D.setAttribute("geometry","primitive:box; height:"+(0.5+0.001*lanes[i][j].position%200)+"; width:"+(0.5+0.001*lanes[i][j].position%200)+"; depth:"+(0.5+0.001*lanes[i][j].position%200)+";");
-                            enemyObject3D.setAttribute("position",pos + " " + lanes3D[i] + " -30");
-                            enemyObject3D.setAttribute("rotation",(lanes[i][j].position%360) + " " + (lanes[i][j].position%360) + " " + (lanes[i][j].position%360));  
+                            enemytempVar.setAttribute("geometry","primitive:box; height:"+(0.5+0.001*lanes[i][j].position%200)+"; width:"+(0.5+0.001*lanes[i][j].position%200)+"; depth:"+(0.5+0.001*lanes[i][j].position%200)+";");
+                            enemytempVar.setAttribute("position",pos + " " + lanes3D[i] + " -30");
+                            enemytempVar.setAttribute("rotation",(lanes[i][j].position%360) + " " + (lanes[i][j].position%360) + " " + (lanes[i][j].position%360));  
                         }
                         else{
-                            const enemyObject3D = document.createElement("a-entity");
-                            enemyObject3D.setAttribute("id","lane"+i+"unit"+j);
-                            enemyObject3D.setAttribute("geometry","primitive:box;");
-                            enemyObject3D.setAttribute("material","color: #4CD3D9");
-                            scene.appendChild(enemyObject3D);  
+                            const enemytempVar = document.createElement("a-entity");
+                            enemytempVar.setAttribute("id","lane"+i+"unit"+j);
+                            enemytempVar.setAttribute("geometry","primitive:box;");
+                            enemytempVar.setAttribute("material","color: #4CD3D9");
+                            scene.appendChild(enemytempVar);  
                         }
                         if(j == lanes[i].length - 1 && document.getElementById("lane"+i+"unit"+(j+1))) {
                             scene.removeChild(document.getElementById("lane"+i+"unit"+(j+1)));
                         }   
                     }
                 }
-                
+                */
+                /*               
             }
-        }, 1000/60);
+        }, 1000/60);*/
         /*for (let i = 0; i < 5; i++) {
             for (let j = 0; j < 10; j++) {                
-                const object3D =  document.createElement("a-entity");
-                object3D.setAttribute("geometry","primitive:box; width:1.5; height:1.5; depth:1.5;");
-                object3D.setAttribute("position",towerPositions3D[j]+" "+lanes3D[i]+" -30");
-                object3D.setAttribute("rotation","0 0 0");
-                object3D.setAttribute("material","color: #EF2D5E");
-                scene.appendChild(object3D);                
+                const tempVar =  document.createElement("a-entity");
+                tempVar.setAttribute("geometry","primitive:box; width:1.5; height:1.5; depth:1.5;");
+                tempVar.setAttribute("position",towerPositions3D[j]+" "+lanes3D[i]+" -30");
+                tempVar.setAttribute("rotation","0 0 0");
+                tempVar.setAttribute("material","color: #EF2D5E");
+                scene.appendChild(tempVar);                
             }            
         }*/
     </script>
