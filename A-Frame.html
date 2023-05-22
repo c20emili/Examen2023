@@ -17,6 +17,7 @@
         var lives = 5;
         var money = 200;//used to buy towers
         var lanes = [[],[],[],[],[]];//the lanes on the gamefield
+        var timer = 0;
         // unit = {life,position,type};
         var tower = "";
         var rook = {name:"Rook",health:3,lane:0,position:0,type:1,attack:1,atkSpeed:2,cost:200,note:"Attacks all enemies in it's lane"};
@@ -32,14 +33,19 @@
         var tileSelected = [];
         var frames = 0;
         var data = "";
+        var numbering = 0;
         var testSerie = 0;
         var attacked = false;
         var lanes3D = [25.5, 22.9, 20.3, 17.7, 15.1];
         var towerPositions3D = [0,-5.5,-10.5,-15.5,-21,-26,-32,-37,-43,-48];
         var sceneEl;
         var stopped = false;
+        var demostration = false;
+        var complexity = 1;
+        var mixed;
         var fpsMeter;
         var counter=0;
+        var unitCounter = 0;
         // -------------------------------------------
         var gameCanvas,c;
         var tileWidth=100;
@@ -292,18 +298,23 @@
         //------------------------------------------------------
         function restartGame(){
             sceneEl = document.querySelector('a-scene');
+            if (sceneEl.querySelector('.gamePiece')) {
+                for (let i = 0; i < document.getElementsByClassName('gamePiece').length; i++) {
+                    var element = document.getElementsByClassName('gamePiece')[i];
+                    element.setAttribute('hp',0);
+                }
+            }
             paused = true;
             waves = [];
             waveindexnumber=0;
             towers = [];
             lanes = [[],[],[],[],[]];
-            var c = 0;
             for (let i = 0; i < 3; i++) {
                 waves[i]=[];
                 count=0;
                 for (let index = 0; index < 10; index++) {
-                    c++;
-                    waves[i].push({spawnTime:count*50,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50,num:c}})
+                    unitCounter++;
+                    waves[i].push({spawnTime:count*50,lane:patterns[i][index],unit:{life:5,position:0,type:1,loot:50,num:unitCounter}})
                     count++;
                 }       
             }
@@ -311,20 +322,34 @@
             money = 200;
             document.getElementById("lifeCounter").innerHTML = "lives: " + lives;
             document.getElementById("moneyCounter").innerHTML = "Cash: " + money;
+            tiles=[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]];
         }
         function spawnUnit(lane,unit){
             lanes[lane].push(unit);
             counter++;
             var enemytempVar = document.createElement("a-entity");
             enemytempVar.setAttribute("id","lane"+lane+"unit"+counter);
+            enemytempVar.setAttribute("class","gamePiece");
             enemytempVar.setAttribute("lane",lane);
             enemytempVar.setAttribute("lanenum",lanes[lane].length-1);
             enemytempVar.setAttribute("num",counter);
             enemytempVar.setAttribute("hp",unit.life);
-            enemytempVar.setAttribute("geometry",{primitive: "box"});
+            switch (complexity) {
+                case 1:
+                    enemytempVar.setAttribute("geometry",{primitive: "tetrahedron"});
+                    //enemytempVar.setAttribute("grow",true); 
+                    break; 
+                case 2:
+                    enemytempVar.setAttribute("geometry",{primitive: "octahedron"});
+                    break; 
+                case 3:
+                    enemytempVar.setAttribute("geometry",{primitive: "icosahedron"});
+                    break;            
+                default:
+                    break;
+            }
             enemytempVar.setAttribute("material",{color: "#4CD3D9"});
             enemytempVar.setAttribute("move",true);
-            enemytempVar.setAttribute("grow",true);
             enemytempVar.setAttribute("rotate",true);
             sceneEl.appendChild(enemytempVar);   
         }
@@ -337,6 +362,7 @@
                 money=money - tower.cost;
                 var tempVar =  document.createElement("a-entity");
                 tempVar.setAttribute("id","lane"+t.lane+"tower"+t.position);
+                tempVar.setAttribute("class","gamePiece");
                 tempVar.setAttribute("geometry","primitive:cylinder; height:0.2;");
                 tempVar.setAttribute("position",{
                     x:towerPositions3D[10-t.position],
@@ -349,6 +375,7 @@
                 tempVar.setAttribute('entitytype','base');
                 sceneEl.appendChild(tempVar);
                 var smalltempVar =  document.createElement("a-entity");
+                smalltempVar.setAttribute("class","gamePiece");
                 smalltempVar.setAttribute("id","lane"+t.lane+"towerTop"+t.position);
                 smalltempVar.setAttribute("geometry","primitive:cylinder; radius:0.5; height:1;");
                 smalltempVar.setAttribute("position",{
@@ -386,21 +413,16 @@
 
         function nextWave(){
             waveindexnumber++;
-            if (!fpsMeter) {
+            if (waveindexnumber>waveAmount) {
+                console.log(data);       
+            }
+            else if (!fpsMeter) {
                 fpsMeter = setInterval(() => {
                     var timeStamp = new Date;
-                    testSerie++;
-                    data += testSerie + "," + frames + ",\n";
+                    numbering++;
+                    data += numbering + "," + frames + ",\n";
                     frames = 0;
                 }, 1000);
-            }
-            if (waveindexnumber>waveAmount) {
-                console.log(data);
-                var anchor = document.createElement('a');  
-                anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
-                anchor.target = '_blank';
-                anchor.download = 'ATestData.csv';  
-                anchor.click();           
             }
             waveTimer=0;
             paused=false;
@@ -554,9 +576,7 @@
                             if (lanes[l][0].life <= 0) {
                                 money = money+lanes[l][0].loot;
                                 for (let k = 1; k < lanes[l].length; k++) {
-                                    console.log(k-1)
                                     if (document.getElementById("lane" + l + "unit" + lanes[l][k].num) != null) {
-                                    console.log(k-1)
                                         document.getElementById("lane" + l + "unit" + lanes[l][k].num).setAttribute("lanenum",(k - 1));
                                     }
                                 }
@@ -589,13 +609,108 @@
         function toggle(p) {
             return !p;
         }
-        
+
         document.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'p') {
+            if (e.key.toLowerCase() === 's') {
                 event.preventDefault();
                 stopped = toggle(stopped);
             }
-	    });
+            if (e.key.toLowerCase() === 'w') {
+                event.preventDefault();
+                selectTower(wall);
+            }
+            if (e.key.toLowerCase() === 'p') {
+                event.preventDefault();
+                selectTower(pawn);
+            }
+            if (e.key.toLowerCase() === 'b') {
+                event.preventDefault();
+                selectTower(bishop);
+            }
+            if (e.key.toLowerCase() === 'r') {
+                event.preventDefault();
+                selectTower(rook);
+            }
+            if (e.key.toLowerCase() === 'l') {
+                event.preventDefault();
+                demostration = toggle(demostration);
+            } 
+            if (e.key.toLowerCase() === 'v') {
+                event.preventDefault();
+                complexity = complexity + 1;
+                if (complexity == 4) {
+                    complexity = 1;
+                }
+            }
+        });
+        setInterval(() => {
+            if (demostration) {
+                timer++;
+                demo();
+            }
+        }, 500);
+
+        function demo() {
+            if (timer == 1) {
+                selectTower(bishop);
+                nextWave();
+            }
+            if (timer == 2) {
+                placeTower(bishop,3,10);
+            }
+            if (timer == 3) {
+                placeTower(bishop,4,10);
+            }
+            if (timer == 10) {
+                placeTower(bishop,2,10);
+            }
+            if (timer == 20) {
+                nextWave();
+            } 
+            if (timer == 22) {
+                selectTower(pawn);
+            }
+            if (timer == 24) {
+                placeTower(pawn,1,10);
+            }
+            if (timer == 26) {
+                placeTower(pawn,5,10);
+            }
+            if (timer == 28) {
+                selectTower(rook);
+                placeTower(rook,2,9);
+            }
+            if (timer == 29) {
+                placeTower(rook,4,9);
+            }
+            if (timer == 30) {
+                placeTower(rook,3,9);
+            }
+            if (timer == 31) {
+                nextWave();
+            } 
+            if (timer == 33) {
+                placeTower(rook,1,9);
+            }
+            if (timer == 37) {
+                placeTower(rook,5,9);
+            }
+            if (timer == 46) {
+                nextWave();
+                testSerie++;
+                if (testSerie < 350) {
+                    timer = 0;
+                    restartGame();
+                }
+                else{
+                    var anchor = document.createElement('a');  
+                    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
+                    anchor.target = '_blank';
+                    anchor.download = 'DemoA'+complexity+'.csv';  
+                    anchor.click();
+                }
+            } 
+        }
     </script>
     <style>        
         #gameWindow{

@@ -26,10 +26,11 @@ def anova(*data): # * indicates, 0, 1 , 2 .. arguments
 def exampleAnova():
 
     #Read your data from file
-    df = pd.read_csv('mergedFrames.csv', sep=",", header=None, names=['nr', 'Babylon', 'A-Frame'])
+    #df = pd.read_csv('mergedFrames.csv', sep=",", header=None, names=['nr', 'Babylon', 'A-Frame'])
+    df = pd.read_csv('mergedAll.csv', keep_default_na=False, sep=",", header=None, names=['nr', 'TetrahedronB', 'OctahedronB', 'IcosahedronB', 'TetrahedronA', 'OctahedronA', 'IcosahedronA'])
 
     #Run Anova on data groups
-    if (anova (df['Babylon'], df['A-Frame'])):
+    if (anova (df['TetrahedronB'], df['TetrahedronA'])):
         print ("The means are different")
     else:
         print ("No differences in means")

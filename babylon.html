@@ -29,6 +29,7 @@
         var waveTimer;
         var lives = 5;
         var money = 200;//used to buy towers
+        var timer = 0;
         var lanes = [[],[],[],[],[]];//the lanes on the gamefield
         // unit = {life,position,type};
         var tower = "";
@@ -45,7 +46,11 @@
         var tileSelected = [];
         var frames = 0;
         var data = "";
+        var numbering = 0;
         var testSerie = 0;
+        var demostration = false;
+        var stopped = false;
+        var complexity = 1;
         //--------------------------------------------- babylon.js
         var sceneToRender = null;
         var boxUnits = [];
@@ -203,8 +208,17 @@
         function restartGame(){
             paused = true;
             waves = [];
-            waveindexNumber=0;
+            waveindexNumber = 0;
             towers = [];
+            for (let i= 0; i< towerCylinders.length; i++) {
+                var tc = towerCylinders[i];
+                for (let j = 0; j < tc.length; j++) {
+                    if(tc[j][0]){
+                        tc[j][0].dispose();
+                        tc[j][1].dispose();
+                    }                    
+                }                
+            }
             lanes = [[],[],[],[],[]];
             for (let i = 0; i < waveAmount; i++) {
                 waves[i]=[];
@@ -218,7 +232,10 @@
             money = 200;
             document.getElementById("lifeCounter").innerHTML = "lives: " + lives;
             document.getElementById("moneyCounter").innerHTML = "Cash: " + money;
-            //clearField();
+            tiles=[[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0]];
+            
+        }
+        function initBabylon() {
             canvas = document.getElementById("renderCanvas");
             engine = new BABYLON.Engine(canvas);
             scene = new BABYLON.Scene(engine);// create a basic Babylon Scene object
@@ -282,9 +299,8 @@
                     }
                     scene.render();
                 }
-            }); 
+            });
         }
-
         function placeTower(tower,l,pos){
             if (money>=tower.cost) {
                 tiles[pos][l] = tower.type;
@@ -292,7 +308,7 @@
                 towers.push(t);
                 money=money - tower.cost;                
                 towerCylinders[l][pos][0] = new BABYLON.MeshBuilder.CreateCylinder("cylinder", {}, scene);
-                towerCylinders[l][pos][0].scaling = new BABYLON.Vector3(0.2,0.2,0.2);     
+                towerCylinders[l][pos][0].scaling = new BABYLON.Vector3(0.2,0.1,0.2);     
                 towerCylinders[l][pos][0].rotation = new BABYLON.Vector3(-1.5, 0, 0);
                 towerCylinders[l][pos][0].position = new BABYLON.Vector3(-5 + pos + 0.5,1.07-l/2,-0.2);
                 towerCylinders[l][pos][1] = new BABYLON.MeshBuilder.CreateCylinder("cylinder", {}, scene);
@@ -305,9 +321,22 @@
         function spawnUnit(lane,unit){
             lanes[lane].push(unit);
             var j = unit.num;
-            boxUnits[j] = new BABYLON.MeshBuilder.CreateBox("box", {}, scene);
+            switch (complexity) {
+                case 1:
+                    boxUnits[j] = BABYLON.MeshBuilder.CreatePolyhedron("poly", {type:0}, scene);
+                    break; 
+                case 2:
+                    boxUnits[j] = BABYLON.MeshBuilder.CreatePolyhedron("poly", {type:1}, scene);
+                    break; 
+                case 3:
+                    boxUnits[j] = BABYLON.MeshBuilder.CreatePolyhedron("poly", {type:3}, scene);
+                    break;            
+                default:
+                    break;
+            }
+            //boxUnits[j] = new BABYLON.MeshBuilder.CreateBox("box", {}, scene);
             boxUnits[j].material = unit1Material;
-            boxUnits[j].scaling = new BABYLON.Vector3(0.2,0.2,0.2);
+            boxUnits[j].scaling = new BABYLON.Vector3(0.1,0.1,0.1);
             boxUnits[j].position = new BABYLON.Vector3(-4.9+(unit.position/100) ,1-lane/2 ,0);//unitbox position
             const boxKeysSpin = [];
             boxKeysSpin.push({
@@ -351,20 +380,15 @@
         var fpsMeter;
         function nextWave() {
             waveindexNumber++;
-            if (!fpsMeter) {
+            if (waveindexNumber>waveAmount) {
+                console.log(data);       
+            }
+            else if (!fpsMeter) {
                 fpsMeter = setInterval(() => {
-                    testSerie++;
-                    data += testSerie +", "+ frames + ",\n";
+                    numbering++;
+                    data += numbering +", "+ frames + "\n";
                     frames = 0;
                 }, 1000);
-            }
-            if (waveindexNumber>waveAmount) {
-                console.log(data);
-                var anchor = document.createElement('a');  
-                anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
-                anchor.target = '_blank';
-                anchor.download = 'BTestData.csv';  
-                anchor.click();
             }
             waveTimer=0;
             paused=false;
@@ -511,21 +535,111 @@
             }
         }
         
-        var stopped = false;
         function toggle(p) {
             return !p;
         }
         
         document.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'p') {
+            if (e.key.toLowerCase() === 's') {
                 event.preventDefault();
                 stopped = toggle(stopped);
             }
+            if (e.key.toLowerCase() === 'w') {
+                event.preventDefault();
+                selectTower(wall);
+            }
+            if (e.key.toLowerCase() === 'p') {
+                event.preventDefault();
+                selectTower(pawn);
+            }
+            if (e.key.toLowerCase() === 'b') {
+                event.preventDefault();
+                selectTower(bishop);
+            }
+            if (e.key.toLowerCase() === 'r') {
+                event.preventDefault();
+                selectTower(rook);
+            }
+            if (e.key.toLowerCase() === 'd') {
+                event.preventDefault();
+                demostration = toggle(demostration);
+            }
+            if (e.key.toLowerCase() === 'v') {
+                event.preventDefault();
+                complexity = complexity + 1;
+                if (complexity == 4) {
+                    complexity = 1;
+                }
+            }
         });
+        setInterval(() => {
+            if (demostration) {
+                timer++;
+                demo();
+            }
+        }, 500);
 
-        function connectUnitObject(unit,wave,nr) {
-            unitObject.push([unit, boxUnits[wave][nr]]);
-        }        
+        function demo() {
+            if (timer == 1) {
+                selectTower(bishop);
+                nextWave();
+            }
+            if (timer == 2) {
+                placeTower(bishop,2,9);
+            }
+            if (timer == 3) {
+                placeTower(bishop,3,9);
+            }
+            if (timer == 8) {
+                placeTower(bishop,1,9);
+            }
+            if (timer == 18) {
+                nextWave();
+            } 
+            if (timer == 19) {
+                selectTower(pawn);
+            }
+            if (timer == 20) {
+                placeTower(pawn,0,9);
+            }
+            if (timer == 22) {
+                placeTower(pawn,4,9);
+            }
+            if (timer == 24) {
+                selectTower(rook);
+                placeTower(rook,1,8);
+            }
+            if (timer == 26) {
+                placeTower(rook,3,8);
+            }
+            if (timer == 28) {
+                placeTower(rook,2,8);
+            }
+            if (timer == 30) {
+                nextWave();
+            } 
+            if (timer == 32) {
+                placeTower(rook,0,8);
+            }
+            if (timer == 34) {
+                placeTower(rook,4,8);
+            }
+            if (timer == 46) {
+                nextWave();
+                testSerie++;
+                if (testSerie < 350) {
+                    timer = 0;
+                    restartGame();
+                }
+                else{
+                    var anchor = document.createElement('a');  
+                    anchor.href = 'data:text/csv;charset=utf-8,' + encodeURI(data);  
+                    anchor.target = '_blank';
+                    anchor.download = 'B'+complexity+'.csv';  
+                    anchor.click();
+                }
+            } 
+        }
     </script>
     <style>        
         #gameWindow{
@@ -566,7 +680,7 @@
     </style>
 </head>
 <!--  -->
-<body onload="init2DGraphics(); restartGame();">
+<body onload="init2DGraphics(); restartGame(); initBabylon();">
     <canvas id="renderCanvas" width="1000" height="250" touch-action="none"></canvas>
     <canvas id="gameWindow" width="1000" height="500" onmousemove="mouseMove(event,this);" onmousedown="selectTile();"></canvas>
     <h3 id="lifeCounter">5</h3>
